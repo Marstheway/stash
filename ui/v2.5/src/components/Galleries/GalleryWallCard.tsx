@@ -92,6 +92,7 @@ const GalleryWallCard: React.FC<IProps> = ({ gallery }) => {
             <Link
               to={`/galleries/${gallery.id}`}
               onClick={(e) => e.stopPropagation()}
+              target="_blank"
             >
               {title && (
                 <TruncatedText
