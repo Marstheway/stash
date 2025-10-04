@@ -54,9 +54,11 @@ const ImageWall: React.FC<IImageWallProps> = ({ images, handleImageOpen }) => {
   images.forEach((image, index) => {
     let imageData = {
       src:
-        image.paths.preview != ""
-          ? image.paths.preview!
-          : image.paths.thumbnail!,
+        image.paths.image != ""
+          ? image.paths.image!
+          : image.paths.preview != ""
+            ? image.paths.preview!
+            : image.paths.thumbnail!,
       width: image.visual_files[0].width,
       height: image.visual_files[0].height,
       tabIndex: index,
@@ -67,6 +69,7 @@ const ImageWall: React.FC<IImageWallProps> = ({ images, handleImageOpen }) => {
     };
     photos.push(imageData);
   });
+
 
   const showLightboxOnClick = useCallback(
     (event, { index }) => {

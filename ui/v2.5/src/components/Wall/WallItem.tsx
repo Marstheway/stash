@@ -151,8 +151,9 @@ export const WallItem = <T extends WallItemType>({
       case "image":
         const image = data as GQL.SlimImageDataFragment;
         return {
-          image: image.paths.thumbnail ?? undefined,
+          image: image.paths.image ?? image.paths.preview ?? image.paths.thumbnail ?? undefined,
         };
+
       default:
         // this is unreachable, inference fails for some reason
         return type as never;

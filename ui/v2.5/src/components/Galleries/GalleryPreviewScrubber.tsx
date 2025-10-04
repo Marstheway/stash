@@ -10,6 +10,7 @@ export const GalleryPreviewScrubber: React.FC<{
   imageCount: number;
   onClick?: (imageIndex: number) => void;
   onPathChanged: React.Dispatch<React.SetStateAction<string | undefined>>;
+  useOriginal?: boolean;
 }> = ({
   className,
   previewPath,
@@ -17,7 +18,9 @@ export const GalleryPreviewScrubber: React.FC<{
   imageCount,
   onClick,
   onPathChanged,
+  useOriginal = false,
 }) => {
+
   const [activeIndex, setActiveIndex] = useState<number>();
   const debounceSetActiveIndex = useThrottle(setActiveIndex, 50);
 
@@ -35,11 +38,20 @@ export const GalleryPreviewScrubber: React.FC<{
         return defaultPath;
       }
 
+      // If useOriginal is true, modify the path to use the original image instead of preview
+      if (useOriginal) {
+        // Replace /preview/ with /image/ in the path to get the original image
+        // This assumes the API follows the same pattern for image URLs
+        const originalPath = previewPath.replace('/preview/', '/image/');
+        return `${originalPath}/${activeIndex}`;
+      }
+
       return `${previewPath}/${activeIndex}`;
     }
 
     onPathChanged(getPath());
-  }, [activeIndex, defaultPath, previewPath, onPathChanged]);
+  }, [activeIndex, defaultPath, previewPath, onPathChanged, useOriginal]);
+
 
   return (
     <div className={cx("preview-scrubber", className)}>

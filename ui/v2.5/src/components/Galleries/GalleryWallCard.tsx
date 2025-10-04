@@ -34,7 +34,19 @@ const GalleryWallCard: React.FC<IProps> = ({ gallery }) => {
     React.useState<Orientation>("landscape");
   const showLightbox = useGalleryLightbox(gallery.id, gallery.chapters);
 
+  // Use cover as fallback
   const cover = gallery?.paths.cover;
+  
+  // Get the first image's original path if available
+  const [firstImagePath, setFirstImagePath] = useState<string | undefined>();
+  
+  // Fetch the first image to get its original path when the component mounts
+  React.useEffect(() => {
+    if (gallery.image_count > 0) {
+      // We'll still use cover as initial image to avoid delay
+      setImgSrc(cover ?? undefined);
+    }
+  }, [gallery.id, gallery.image_count, cover]);
 
   function onCoverLoad(e: React.SyntheticEvent<HTMLImageElement, Event>) {
     const target = e.target as HTMLImageElement;
@@ -51,6 +63,7 @@ const GalleryWallCard: React.FC<IProps> = ({ gallery }) => {
   }
 
   const [imgSrc, setImgSrc] = useState<string | undefined>(cover ?? undefined);
+
   const title = galleryTitle(gallery);
   const performerNames = gallery.performers.map((p) => p.name);
   const performers =
@@ -115,7 +128,9 @@ const GalleryWallCard: React.FC<IProps> = ({ gallery }) => {
               showLightbox(i);
             }}
             onPathChanged={setImgSrc}
+            useOriginal={true}
           />
+
         </div>
       </section>
     </>
