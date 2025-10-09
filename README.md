@@ -10,6 +10,9 @@
   - 每列图片宽度由300增加到450；（原代码是硬编码的，没有配置项 ^_^)
   - 去掉移动视图下左右两边大约2%的黑边，使图片能充分利用屏幕空间；
 
+
+容器镜像：ghcr.io/marstheway/stash:v0.28.1-develop
+
 # Stash
 
 [![Build](https://github.com/stashapp/stash/actions/workflows/build.yml/badge.svg?branch=develop&event=push)](https://github.com/stashapp/stash/actions/workflows/build.yml)
