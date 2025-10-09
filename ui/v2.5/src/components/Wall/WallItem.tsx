@@ -247,10 +247,12 @@ export const WallItem = <T extends WallItemType>({
     );
   };
 
+  const target = linkSrc.startsWith("/scenes/") ? "_blank" : undefined;
+
   return (
     <div className="wall-item">
       <div className={`wall-item-container ${className}`} ref={itemEl}>
-        <Link onClick={onClick} to={linkSrc} className="wall-item-anchor">
+        <Link onClick={onClick} to={linkSrc} className="wall-item-anchor" target={target}>
           <Preview previews={previews} config={config} active={active} />
           {renderText()}
         </Link>

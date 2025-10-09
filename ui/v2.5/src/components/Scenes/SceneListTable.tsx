@@ -49,7 +49,7 @@ export const SceneListTable: React.FC<ISceneListTableProps> = (
       : `/scenes/${scene.id}`;
 
     return (
-      <Link to={sceneLink}>
+      <Link to={sceneLink} target="_blank">
         <img
           loading="lazy"
           className="image-thumbnail"
@@ -67,7 +67,7 @@ export const SceneListTable: React.FC<ISceneListTableProps> = (
       : `/scenes/${scene.id}`;
 
     return (
-      <Link to={sceneLink} title={title}>
+      <Link to={sceneLink} title={title} target="_blank">
         <span className="ellips-data">{title}</span>
       </Link>
     );

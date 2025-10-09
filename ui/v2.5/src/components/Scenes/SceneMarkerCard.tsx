@@ -100,7 +100,7 @@ const SceneMarkerCardDetails = (props: ISceneMarkerCardProps) => {
         className="scene-marker-card__scene"
         lineCount={3}
         text={
-          <Link to={NavUtils.makeSceneMarkersSceneUrl(props.marker.scene)}>
+          <Link to={NavUtils.makeSceneMarkersSceneUrl(props.marker.scene)} target="_blank">
             {objectTitle(props.marker.scene)}
           </Link>
         }
