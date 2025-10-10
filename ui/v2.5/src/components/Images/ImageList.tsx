@@ -24,6 +24,7 @@ import Gallery from "react-photo-gallery";
 import { ExportDialog } from "../Shared/ExportDialog";
 import { objectTitle } from "src/core/files";
 import { ConfigurationContext } from "src/hooks/Config";
+import { defaultImageWallPreferredSize } from "src/utils/imageWall";
 import { ImageGridCard } from "./ImageGridCard";
 import { View } from "../List/views";
 import { IItemListOperation } from "../List/FilteredListToolbar";
@@ -79,7 +80,7 @@ const ImageWall: React.FC<IImageWallProps> = ({ images, handleImageOpen }) => {
   );
 
   function columns(containerWidth: number) {
-    let preferredSize = 450;
+    let preferredSize = uiConfig?.imageWallOptions?.preferredSize ?? defaultImageWallPreferredSize;
     let columnCount = containerWidth / preferredSize;
     return Math.round(columnCount);
   }

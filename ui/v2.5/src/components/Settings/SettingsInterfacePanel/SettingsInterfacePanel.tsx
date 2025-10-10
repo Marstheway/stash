@@ -41,6 +41,7 @@ import {
   defaultImageWallOptions,
   defaultImageWallDirection,
   defaultImageWallMargin,
+  defaultImageWallPreferredSize,
 } from "src/utils/imageWall";
 import { defaultMaxOptionsShown } from "src/core/config";
 import { PatchComponent } from "src/patch";
@@ -129,6 +130,15 @@ export const SettingsInterfacePanel: React.FC = PatchComponent(
         imageWallOptions: {
           ...(ui.imageWallOptions ?? defaultImageWallOptions),
           direction: d,
+        },
+      });
+    }
+
+    function saveImageWallPreferredSize(size: number) {
+      saveUI({
+        imageWallOptions: {
+          ...(ui.imageWallOptions ?? defaultImageWallOptions),
+          preferredSize: size,
         },
       });
     }
@@ -483,6 +493,13 @@ export const SettingsInterfacePanel: React.FC = PatchComponent(
             subHeadingID="dialogs.imagewall.margin_desc"
             value={ui.imageWallOptions?.margin ?? defaultImageWallMargin}
             onChange={(v) => saveImageWallMargin(v)}
+          />
+
+          <NumberSetting
+            headingID="config.ui.image_wall.preferred_size"
+            subHeadingID="dialogs.imagewall.preferred_size_desc"
+            value={ui.imageWallOptions?.preferredSize ?? defaultImageWallPreferredSize}
+            onChange={(v) => saveImageWallPreferredSize(v)}
           />
 
           <SelectSetting

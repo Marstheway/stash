@@ -10,16 +10,24 @@
         "add_play": "Add play"
     },
     "config": {
+        "ui": {
+            "image_wall": {
+                "heading": "Image Wall",
+                "margin": "Margin",
+                "preferred_size": "Preferred Size",
+                "direction": "Direction"
+            }
+        },
         "tools": {
             "scene_filename_parser": {
                 "ignore_organized": "Ignore organized scenes"
             }
-        },
-        "ui": {
-            "custom_locales": {
-                "heading": "Custom localization",
-                "option_label": "Custom localization enabled"
-            }
+        }
+    },
+    "dialogs": {
+        "imagewall": {
+            "margin_desc": "Number of margin pixels around each entire image.",
+            "preferred_size_desc": "Preferred size for each image in the wall layout."
         }
     },
     "eye_color": "Eye Color",
