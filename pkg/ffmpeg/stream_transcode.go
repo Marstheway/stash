@@ -60,6 +60,18 @@ func CodecInit(codec VideoCodec) (args Args) {
 			"-coder", "cabac",
 			"-b_ref_mode", "middle",
 		)
+	case VideoCodecNHEVC:
+		args = append(args,
+			"-rc", "vbr",
+			"-cq", "15",
+			"-preset", "p4",
+		)
+	case VideoCodecNAV1:
+		args = append(args,
+			"-rc", "vbr",
+			"-cq", "20",
+			"-preset", "p4",
+		)
 	case VideoCodecI264, VideoCodecIVP9:
 		args = append(args,
 			"-global_quality", "20",
@@ -70,15 +82,49 @@ func CodecInit(codec VideoCodec) (args Args) {
 			"-q", "20",
 			"-preset", "faster",
 		)
+	case VideoCodecIHEVC:
+		args = append(args,
+			"-global_quality", "20",
+			"-preset", "faster",
+		)
+	case VideoCodecIAV1:
+		args = append(args,
+			"-global_quality", "25",
+			"-preset", "faster",
+		)
 	case VideoCodecV264, VideoCodecVVP9:
 		args = append(args,
 			"-qp", "20",
+		)
+	case VideoCodecVHEVC:
+		args = append(args,
+			"-qp", "20",
+		)
+	case VideoCodecVAV1:
+		args = append(args,
+			"-qp", "25",
 		)
 	case VideoCodecA264:
 		args = append(args,
 			"-quality", "speed",
 		)
+	case VideoCodecAHEVC:
+		args = append(args,
+			"-quality", "speed",
+		)
+	case VideoCodecAAV1:
+		args = append(args,
+			"-quality", "balanced",
+		)
 	case VideoCodecM264:
+		args = append(args,
+			"-realtime", "1",
+		)
+	case VideoCodecMHEVC:
+		args = append(args,
+			"-realtime", "1",
+		)
+	case VideoCodecMAV1:
 		args = append(args,
 			"-realtime", "1",
 		)
@@ -116,7 +162,11 @@ var (
 			if videoOnly {
 				args = args.SkipAudio()
 			} else {
-				args = append(args, "-ac", "2")
+				args = args.AudioCodec(AudioCodecLibOpus)
+				args = append(args,
+					"-b:a", "96k",
+					"-ac", "2",
+				)
 			}
 			args = args.Format(FormatWebm)
 			return
@@ -132,7 +182,6 @@ var (
 				args = args.AudioCodec(AudioCodecLibOpus)
 				args = append(args,
 					"-b:a", "96k",
-					"-vbr", "on",
 					"-ac", "2",
 				)
 			}
@@ -162,22 +211,53 @@ func (o TranscodeOptions) FileGetCodec(sm *StreamManager, maxTranscodeSize int) 
 
 	switch o.StreamType.MimeType {
 	case MimeMp4Video:
-		if !needsResize && o.VideoFile.VideoCodec == H264 {
-			return VideoCodecCopy
+		// Check for native format support to avoid unnecessary transcoding
+		if !needsResize {
+			switch o.VideoFile.VideoCodec {
+			case H264:
+				return VideoCodecCopy
+			case Hevc, H265:
+				// HEVC in MP4 is widely supported by modern browsers
+				return VideoCodecCopy
+			case Av1:
+				// AV1 in MP4 is supported by modern browsers
+				return VideoCodecCopy
+			}
 		}
 		codec = VideoCodecLibX264
 		if hwcodec := sm.encoder.hwCodecMP4Compatible(); hwcodec != nil && sm.config.GetTranscodeHardwareAcceleration() {
+			logger.Infof("[transcode] Using hardware codec for MP4: %s (%s)", hwcodec.Name, hwcodec.CodeName)
 			codec = *hwcodec
+		} else if sm.config.GetTranscodeHardwareAcceleration() {
+			logger.Infof("[transcode] No compatible hardware codec found for MP4, falling back to software: %s", VideoCodecLibX264.Name)
 		}
 	case MimeWebmVideo:
-		if !needsResize && (o.VideoFile.VideoCodec == Vp8 || o.VideoFile.VideoCodec == Vp9) {
-			return VideoCodecCopy
+		// Check for native format support to avoid unnecessary transcoding
+		if !needsResize {
+			switch o.VideoFile.VideoCodec {
+			case Vp8, Vp9:
+				return VideoCodecCopy
+			case Av1:
+				// AV1 in WebM is well supported
+				return VideoCodecCopy
+			}
 		}
 		codec = VideoCodecVP9
 		if hwcodec := sm.encoder.hwCodecWEBMCompatible(); hwcodec != nil && sm.config.GetTranscodeHardwareAcceleration() {
+			logger.Infof("[transcode] Using hardware codec for WebM: %s (%s)", hwcodec.Name, hwcodec.CodeName)
 			codec = *hwcodec
+		} else if sm.config.GetTranscodeHardwareAcceleration() {
+			logger.Infof("[transcode] No compatible hardware codec found for WebM, falling back to software: %s", VideoCodecVP9.Name)
 		}
 	case MimeMkvVideo:
+		// For MKV, prefer copy if the codec is supported by browsers
+		if !needsResize {
+			switch o.VideoFile.VideoCodec {
+			case H264, Hevc, H265, Vp8, Vp9, Av1:
+				// Modern browsers support these codecs in MKV containers
+				return VideoCodecCopy
+			}
+		}
 		codec = VideoCodecCopy
 	}
 
@@ -198,6 +278,11 @@ func (o TranscodeOptions) makeStreamArgs(sm *StreamManager) Args {
 	codec := o.FileGetCodec(sm, maxTranscodeSize)
 
 	fullhw := sm.config.GetTranscodeHardwareAcceleration() && sm.encoder.hwCanFullHWTranscode(sm.context, codec, o.VideoFile, maxTranscodeSize)
+	if fullhw {
+		logger.Infof("[transcode] Full hardware transcode enabled for %s using codec: %s (%s)", o.VideoFile.Basename, codec.Name, codec.CodeName)
+	} else if sm.config.GetTranscodeHardwareAcceleration() {
+		logger.Infof("[transcode] Hardware acceleration enabled but full hardware transcode not available for %s, using hybrid mode", o.VideoFile.Basename)
+	}
 	args = sm.encoder.hwDeviceInit(args, codec, fullhw)
 	args = append(args, extraInputArgs...)
 
