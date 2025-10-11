@@ -31,8 +31,8 @@ ARG STASH_VERSION
 RUN make flags-release flags-pie stash
 
 # Final Runnable Image
-FROM alpine:latest
-RUN apk add --no-cache ca-certificates vips-tools ffmpeg intel-media-driver libva libva-intel-driver libva-utils
+FROM ubuntu:22.04
+RUN apt-get update && apt-get install -y ca-certificates ffmpeg vips-tools libva-dev libva-intel-vaapi-driver va-driver-all && rm -rf /var/lib/apt/lists/*
 COPY --from=backend /stash/stash /usr/bin/
 ENV STASH_CONFIG_FILE=/root/.stash/config.yml
 EXPOSE 9999

@@ -131,7 +131,7 @@ func (e *ThumbnailEncoder) GetPreview(inPath string, outPath string, maxSize int
 
 func (e *ThumbnailEncoder) ffmpegImageThumbnail(image *bytes.Buffer, maxSize int) ([]byte, error) {
 	args := transcoder.ImageThumbnail("-", transcoder.ImageThumbnailOptions{
-		OutputFormat:  ffmpeg.ImageFormatJpeg,
+		OutputFormat:  ffmpeg.ImageFormatWebp,
 		OutputPath:    "-",
 		MaxDimensions: maxSize,
 		Quality:       ffmpegImageQuality,
