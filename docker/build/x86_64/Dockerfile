@@ -1,7 +1,7 @@
 # This dockerfile should be built with `make docker-build` from the stash root.
 
 # Build Frontend
-FROM node:alpine as frontend
+FROM node:alpine AS frontend
 RUN apk add --no-cache make git
 ## cache node_modules separately
 COPY ./ui/v2.5/package.json ./ui/v2.5/yarn.lock /stash/ui/v2.5/
@@ -16,7 +16,7 @@ ARG STASH_VERSION
 RUN BUILD_DATE=$(date +"%Y-%m-%d %H:%M:%S") make ui
 
 # Build Backend
-FROM golang:1.22-alpine as backend
+FROM golang:1.22-alpine AS backend
 RUN apk add --no-cache make alpine-sdk
 WORKDIR /stash
 COPY ./go* ./*.go Makefile gqlgen.yml .gqlgenc.yml /stash/
@@ -32,7 +32,7 @@ RUN make flags-release flags-pie stash
 
 # Final Runnable Image
 FROM alpine:latest
-RUN apk add --no-cache ca-certificates vips-tools ffmpeg intel-media-driver libva libva-intel-driver libva-utils
+RUN apk add --no-cache ca-certificates vips-tools ffmpeg libva libva-utils
 COPY --from=backend /stash/stash /usr/bin/
 ENV STASH_CONFIG_FILE=/root/.stash/config.yml
 EXPOSE 9999

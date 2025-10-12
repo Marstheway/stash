@@ -1,17 +1,19 @@
 # 个人自用版
 
-修改点：
-- 对具体的图片链接放开鉴权，配合脚本可以全自动设置Stash库中的图片作为performer, group, tag, studio的cover封面；
-- 容器内默认打包Intel核显驱动，插件依赖使用compose build二次编译打包；
-- scence player删除mp4实时转码选项，默认webm转码（我的硬件不支持，巨慢）
-- gallery和scence导航页打开具体的gallery和scence时，用newtab
+感谢Stash项目，真神器。
+
+个人自用版修改点：
+- 对图片链接放开鉴权，方便直接设置stash库中的图片作为封面；
+- scence player删除mp4实时转码选项，默认webm转码（不知为什么，反正在我的cpu上不好用，直接关了）
+- gallery和scence导航页打开gallery和scence时，用newtab；（个人操作习惯）
 - gallery的wall瀑布流视图改进，方便欣赏美图：
-  - 使用原始图片，而非preview和thumbnail图片，太模糊了；
-  - 每列图片宽度由300增加到450；（原代码是硬编码的，没有配置项 ^_^)
-  - 去掉移动视图下左右两边大约2%的黑边，使图片能充分利用屏幕空间；
+  - 如果图片小于1MB使用原图，否则使用thumbnail；
+  - 将thumbnail图片由640改为1920,并改为webp格式，提升清晰度；
+  - 支持设置每列图片宽度（原来硬编码300)，默认450，现在可配置；
+  - 去掉移动视图下左右两边大约2%的黑边，使图片能充分利用手机屏幕空间；
+- 增加硬件编码支持： hevc, av1
 
-
-容器镜像：ghcr.io/marstheway/stash:v0.28.1-develop
+容器镜像：ghcr.io/marstheway/stash:v0.28.1-booster。容器内没有硬件驱动，如需硬件加速，需要自行安装驱动（docker build)
 
 # Stash
 
