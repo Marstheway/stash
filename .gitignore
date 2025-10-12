@@ -61,3 +61,8 @@ node_modules
 dist
 .DS_Store
 /.local*
+
+# AI assistant configuration files
+CLAUDE.md
+AGENTS.md
+CODEBUDDY.md
