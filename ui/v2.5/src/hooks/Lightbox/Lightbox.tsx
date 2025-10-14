@@ -293,6 +293,26 @@ export const LightboxComponent: React.FC<IProps> = ({
       if (index === null) setIndex(initialIndex);
       document.body.style.overflow = "hidden";
       Mousetrap.pause();
+      
+      // 设置容器高度为实际可视区域高度，解决移动浏览器地址栏导致的偏移问题
+      const updateHeight = () => {
+        if (containerRef.current) {
+          containerRef.current.style.height = `${window.innerHeight}px`;
+        }
+      };
+      
+      // 初始设置
+      updateHeight();
+      
+      // 监听窗口大小变化（包括移动浏览器地址栏的显示/隐藏）
+      window.addEventListener('resize', updateHeight);
+      // 监听方向变化
+      window.addEventListener('orientationchange', updateHeight);
+      
+      return () => {
+        window.removeEventListener('resize', updateHeight);
+        window.removeEventListener('orientationchange', updateHeight);
+      };
     }
   }, [initialIndex, isVisible, setIndex, index]);
 

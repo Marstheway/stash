@@ -9,6 +9,13 @@
   top: 0;
   z-index: 1040;
   cursor: pointer; // 整个区域都是可点击的
+  // 使用实际可视区域高度，避免移动浏览器地址栏导致的偏移
+  height: 100vh;
+  height: 100dvh; // 使用动态视口高度（如果浏览器支持）
+  
+  @supports (height: 100dvh) {
+    height: 100dvh; // 动态视口高度会自动适应浏览器UI的显示/隐藏
+  }
 
   &-header {
     align-items: center;
@@ -183,8 +190,8 @@
 
   &-display {
     display: flex;
-    height: 100vh; // 使用视口高度
-    width: 100vw;  // 使用视口宽度
+    height: 100%; // 使用父容器高度而不是100vh
+    width: 100%;  // 使用父容器宽度
     justify-content: space-between;
     position: absolute; // 改为绝对定位
     top: 0;
@@ -214,9 +221,9 @@
   &-carousel {
     backface-visibility: hidden;
     display: block;
-    height: 100vh; // 使用视口高度
+    height: 100%; // 使用父容器高度
     position: relative;
-    width: 100vw;  // 使用视口宽度
+    width: 100%;  // 使用父容器宽度
 
     &-image {
       backface-visibility: hidden;
@@ -226,8 +233,8 @@
       position: absolute;
       top: 0;
       left: 0;
-      width: 100vw; // 使用视口宽度
-      height: 100vh; // 使用视口高度
+      width: 100%; // 使用父容器宽度
+      height: 100%; // 使用父容器高度
       // 移除padding限制，让图片真正占满整个屏幕
       box-sizing: border-box;
       transform: translate3d(0, 0, 0);
