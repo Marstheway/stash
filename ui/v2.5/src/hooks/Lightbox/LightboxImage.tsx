@@ -469,11 +469,8 @@ export const LightboxImage: React.FC<IProps> = ({
       return;
     }
 
-    if (ev.nativeEvent.offsetX >= (ev.target as HTMLElement).offsetWidth / 2) {
-      onRight();
-    } else {
-      onLeft();
-    }
+    // 不再在图片组件内部处理点击切换，让外层Lightbox组件统一处理
+    // 这样可以确保点击图片和点击空白区域的行为一致
   }
 
   function onTouchStart(ev: React.TouchEvent) {
@@ -556,6 +553,11 @@ export const LightboxImage: React.FC<IProps> = ({
       className={`${CLASSNAME_IMAGE}`}
       onWheel={(e) => onContainerScroll(e)}
       style={{ willChange: "transform" }}
+      onClick={(e) => {
+        // 允许点击事件冒泡到父容器，让handleScreenClick处理
+        // 不阻止事件冒泡，让外层Lightbox组件处理点击逻辑
+        // 注意：不要调用 e.stopPropagation()，确保事件能冒泡到外层
+      }}
     >
       {defaultZoom ? (
         <picture
@@ -575,7 +577,6 @@ export const LightboxImage: React.FC<IProps> = ({
             style={{ touchAction: "none" }}
             onWheel={current ? (e) => onImageScroll(e) : undefined}
             onMouseDown={onImageMouseDown}
-            onMouseUp={onImageMouseUp}
             onMouseMove={onImageMouseOver}
             onTouchStart={onTouchStart}
             onTouchMove={onTouchMove}

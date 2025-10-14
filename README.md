@@ -2,18 +2,40 @@
 
 感谢Stash项目，真神器。
 
-个人自用版修改点：
+## 修改点
+### 通用改动
+
+- 增加对现代cpu的硬件编码支持： hevc, av1
 - 对图片链接放开鉴权，方便直接设置stash库中的图片作为封面；
-- scence player删除mp4实时转码选项，默认webm转码（不知为什么，反正在我的cpu上不好用，直接关了）
-- gallery和scence导航页打开gallery和scence时，用newtab；（个人操作习惯）
-- gallery的wall瀑布流视图改进，方便欣赏美图：
+- 打开具体的scence, gallery, performer时，用newtab；（个人操作习惯）
+
+### gallery
+
+- gallery的wall瀑布流视图改动：
   - 如果图片小于1MB使用原图，否则使用thumbnail；
-  - 将thumbnail图片由640改为1920,并改为webp格式，提升清晰度；
+  - 只对超过1MB的文件生成thumbnail，格式由640改为1920,并改为webp q=85，提升清晰度；
   - 支持设置每列图片宽度（原来硬编码300)，默认450，现在可配置；
   - 去掉移动视图下左右两边大约2%的黑边，使图片能充分利用手机屏幕空间；
-- 增加硬件编码支持： hevc, av1
 
-容器镜像：ghcr.io/marstheway/stash:v0.28.1-booster。容器内没有硬件驱动，如需硬件加速，需要自行安装驱动（docker build)
+### 图片lightbox
+
+- 图片全屏显示，不被局限在header, footer内部；
+- 图片切换动画支持硬件加速，动画效果改为淡入淡出；
+- footer移除o-counter，仅保留星标（个人不常用o-counter）；
+- 重构屏幕手势：
+  - 左边1/3: 上一张图
+  - 右边1/3：下一张图
+  - 中间： 切换显示/隐藏所有控件
+
+### 视频播放器
+- scence player删除mp4实时转码选项，默认webm转码（不知为什么，反正在我的AMD8745H上不好用，直接关了）
+
+
+容器镜像：ghcr.io/marstheway/stash:v0.28.1-develop。
+
+容器内没有硬件驱动，如需硬件加速，需要自行安装驱动（docker build)
+
+<br><br>
 
 # Stash
 

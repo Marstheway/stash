@@ -27,10 +27,6 @@ import { useInterfaceLocalForage } from "../LocalForage";
 import { imageLightboxDisplayModeIntlMap } from "src/core/enums";
 import { ILightboxImage, IChapter } from "./types";
 import {
-  faArrowLeft,
-  faArrowRight,
-  faChevronLeft,
-  faChevronRight,
   faCog,
   faExpand,
   faPause,
@@ -112,8 +108,11 @@ export const LightboxComponent: React.FC<IProps> = ({
   const [isFullscreen, setFullscreen] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [showChapters, setShowChapters] = useState(false);
+  const [showHeader, setShowHeader] = useState(true);
+  const [showFooter, setShowFooter] = useState(true);
   const [imagesLoaded, setImagesLoaded] = useState(0);
   const [navOffset, setNavOffset] = useState<React.CSSProperties | undefined>();
+  const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
 
   const oldImages = useRef<ILightboxImage[]>([]);
 
@@ -320,10 +319,91 @@ export const LightboxComponent: React.FC<IProps> = ({
     Mousetrap.unpause();
   }, [isFullscreen, hide]);
 
-  const handleClose = (e: React.MouseEvent<HTMLDivElement>) => {
-    const { className } = e.target as Element;
-    if (className && className.includes && className.includes(CLASSNAME_IMAGE))
-      close();
+  const handleScreenClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // 检查点击的是否是具体的UI控件，如果是则忽略
+    const target = e.target as Element;
+    const tagName = target.tagName.toLowerCase();
+    const className = target.className || '';
+    
+    // 如果点击的是按钮、链接、输入框等交互元素，或者具体的UI组件，则忽略
+    // 注意：移除了 img 标签的过滤，让点击图片也能触发切换
+    if (
+      tagName === 'button' || 
+      tagName === 'a' || 
+      tagName === 'input' || 
+      tagName === 'select' || 
+      tagName === 'textarea' ||
+      tagName === 'video' ||
+      // tagName === 'img' ||  // 移除此过滤，允许点击图片切换
+      className.includes('Button') ||
+      className.includes('btn') ||
+      className.includes('Icon') ||
+      className.includes('rating') ||
+      target.closest('button, a, input, select, textarea, video')  // 从closest中也移除了img
+    ) {
+      return;
+    }
+    
+    // 获取点击位置的屏幕坐标
+    const clickX = e.clientX;
+    const screenWidth = window.innerWidth;
+    
+    // 计算三个区域的分界点
+    const leftBoundary = screenWidth / 3;
+    const rightBoundary = (screenWidth * 2) / 3;
+    
+    // 判断点击区域
+    if (clickX < leftBoundary) {
+      // 左侧1/3区域：切换上一张图片
+      handleLeft();
+    } else if (clickX > rightBoundary) {
+      // 右侧1/3区域：切换下一张图片
+      handleRight();
+    } else {
+      // 中间区域：切换header和footer显示状态
+      setShowHeader(prev => !prev);
+      setShowFooter(prev => !prev);
+    }
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      setTouchStart({
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY
+      });
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStart || e.changedTouches.length !== 1) return;
+    
+    const touchEnd = {
+      x: e.changedTouches[0].clientX,
+      y: e.changedTouches[0].clientY
+    };
+    
+    const deltaX = touchEnd.x - touchStart.x;
+    const deltaY = touchEnd.y - touchStart.y;
+    const absDeltaX = Math.abs(deltaX);
+    const absDeltaY = Math.abs(deltaY);
+    
+    // 确保是水平滑动而不是垂直滚动
+    if (absDeltaX > absDeltaY && absDeltaX > 50) {
+      if (deltaX > 0) {
+        // 向右滑动：上一张
+        handleLeft();
+      } else {
+        // 向左滑动：下一张
+        handleRight();
+      }
+    } else if (absDeltaY > absDeltaX && absDeltaY > 50) {
+      // 垂直滑动：切换UI显示
+      setShowHeader(prev => !prev);
+      setShowFooter(prev => !prev);
+    }
+    
+    setTouchStart(null);
   };
 
   const handleLeft = useCallback(
@@ -396,6 +476,11 @@ export const LightboxComponent: React.FC<IProps> = ({
       if (e.key === "ArrowLeft") handleLeft();
       else if (e.key === "ArrowRight") handleRight();
       else if (e.key === "Escape") close();
+      else if (e.key === "h" || e.key === "H") {
+        // H键切换header和footer显示
+        setShowHeader(prev => !prev);
+        setShowFooter(prev => !prev);
+      }
     },
     [setInstant, handleLeft, handleRight, close]
   );
@@ -711,7 +796,8 @@ export const LightboxComponent: React.FC<IProps> = ({
 
     return (
       <>
-        <div className={CLASSNAME_HEADER}>
+        {showHeader && (
+          <div className={cx(CLASSNAME_HEADER, { hidden: !showHeader })}>
           <div className={CLASSNAME_LEFT_SPACER}>{renderChapterMenu()}</div>
           <div className={CLASSNAME_INDICATOR}>
             <span>
@@ -803,18 +889,9 @@ export const LightboxComponent: React.FC<IProps> = ({
             </Button>
           </div>
         </div>
+        )}
         <div className={CLASSNAME_DISPLAY}>
-          {allowNavigation && (
-            <Button
-              variant="link"
-              onClick={handleLeft}
-              className={`${CLASSNAME_NAVBUTTON} d-none d-lg-block`}
-            >
-              <Icon icon={faChevronLeft} />
-            </Button>
-          )}
-
-          <div
+            <div
             className={cx(CLASSNAME_CAROUSEL, {
               [CLASSNAME_INSTANT]: instantTransition,
             })}
@@ -867,37 +944,14 @@ export const LightboxComponent: React.FC<IProps> = ({
               );
             })}
           </div>
-
-          {allowNavigation && (
-            <Button
-              variant="link"
-              onClick={handleRight}
-              className={`${CLASSNAME_NAVBUTTON} d-none d-lg-block`}
-            >
-              <Icon icon={faChevronRight} />
-            </Button>
-          )}
         </div>
         {showNavigation && !isFullscreen && images.length > 1 && (
           <div className={CLASSNAME_NAV} style={navOffset} ref={navRef}>
-            <Button
-              variant="link"
-              onClick={() => setIndex(images.length - 1)}
-              className={CLASSNAME_NAVBUTTON}
-            >
-              <Icon icon={faArrowLeft} className="mr-4" />
-            </Button>
             {navItems}
-            <Button
-              variant="link"
-              onClick={() => setIndex(0)}
-              className={CLASSNAME_NAVBUTTON}
-            >
-              <Icon icon={faArrowRight} className="ml-4" />
-            </Button>
           </div>
         )}
-        <div className={CLASSNAME_FOOTER}>
+        {showFooter && (
+          <div className={cx(CLASSNAME_FOOTER, { hidden: !showFooter })}>
           <div className={CLASSNAME_FOOTER_LEFT}>
             {currentImage?.id !== undefined && (
               <RatingSystem
@@ -917,6 +971,7 @@ export const LightboxComponent: React.FC<IProps> = ({
           </div>
           <div></div>
         </div>
+        )}
       </>
     );
   }
@@ -930,7 +985,7 @@ export const LightboxComponent: React.FC<IProps> = ({
       className={CLASSNAME}
       role="presentation"
       ref={containerRef}
-      onClick={handleClose}
+      onClick={handleScreenClick}
     >
       {renderBody()}
     </div>

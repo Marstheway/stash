@@ -8,6 +8,7 @@
   right: 0;
   top: 0;
   z-index: 1040;
+  cursor: pointer; // 整个区域都是可点击的
 
   &-header {
     align-items: center;
@@ -16,6 +17,13 @@
     height: 4rem;
     position: relative;
     z-index: 2; // 确保在display上层
+    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+    
+    &.hidden {
+      transform: translateY(-100%);
+      opacity: 0;
+      pointer-events: none;
+    }
 
     .fa-icon {
       opacity: 0.4;
@@ -96,6 +104,13 @@
     left: 0;
     right: 0;
     z-index: 2; // 确保在display上层
+    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+    
+    &.hidden {
+      transform: translateY(100%);
+      opacity: 0;
+      pointer-events: none;
+    }
     
     @media (max-width: 575.98px) {
       height: 3.5rem; // 移动设备上稍微减小高度
@@ -175,6 +190,25 @@
     top: 0;
     left: 0;
     z-index: 1; // 确保在背景层
+    cursor: pointer;
+    
+    // 简化悬停效果，移除箭头指示器
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.02);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+    
+    &:hover::before {
+      opacity: 1;
+    }
   }
 
   &-carousel {
@@ -243,6 +277,7 @@
         object-fit: contain;
         transform: translate3d(0, 0, 0);
         will-change: transform;
+        pointer-events: auto; // 确保图片可以接收点击事件
       }
     }
   }
