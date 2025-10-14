@@ -182,6 +182,7 @@ var (
 				args = args.AudioCodec(AudioCodecLibOpus)
 				args = append(args,
 					"-b:a", "96k",
+					"-vbr", "on",
 					"-ac", "2",
 				)
 			}
