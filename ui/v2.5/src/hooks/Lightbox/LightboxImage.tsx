@@ -3,10 +3,10 @@ import * as GQL from "src/core/generated-graphql";
 
 const ZOOM_STEP = 1.1;
 const ZOOM_FACTOR = 700;
-const SCROLL_GROUP_THRESHOLD = 8;
-const SCROLL_GROUP_EXIT_THRESHOLD = 4;
+const SCROLL_GROUP_THRESHOLD = 3; // 降低阈值，让普通滚轮一格就能触发
+const SCROLL_GROUP_EXIT_THRESHOLD = 2; // 相应降低退出阈值
 const SCROLL_INFINITE_THRESHOLD = 10;
-const SCROLL_PAN_STEP = 75;
+const SCROLL_PAN_STEP = 50; // 减小步长，让滚动更精细
 const SCROLL_PAN_FACTOR = 2;
 const CLASSNAME = "Lightbox";
 const CLASSNAME_CAROUSEL = `${CLASSNAME}-carousel`;
@@ -318,7 +318,7 @@ export const LightboxImage: React.FC<IProps> = ({
       // #2535 - require additional scrolls before changing page
       if (
         !scrollable ||
-        scrollAttempts.current <= -scrollAttemptsBeforeChange
+        scrollAttempts.current <= -Math.max(1, scrollAttemptsBeforeChange) // 最小值为1，确保能快速切换
       ) {
         scrollAttempts.current = 0;
         onLeft();
@@ -342,7 +342,7 @@ export const LightboxImage: React.FC<IProps> = ({
       }
     } else {
       // #2535 - require additional scrolls before changing page
-      if (!scrollable || scrollAttempts.current >= scrollAttemptsBeforeChange) {
+      if (!scrollable || scrollAttempts.current >= Math.max(1, scrollAttemptsBeforeChange)) {
         scrollAttempts.current = 0;
         onRight();
       } else {
@@ -418,6 +418,11 @@ export const LightboxImage: React.FC<IProps> = ({
     } else if (absDeltaY <= SCROLL_GROUP_EXIT_THRESHOLD) {
       // only "exit" the scroll group if speed has slowed considerably
       inScrollGroup.current = false;
+    }
+    
+    // 如果滚动幅度足够大，立即重置尝试计数，让下次滚动更容易触发
+    if (absDeltaY >= SCROLL_GROUP_THRESHOLD * 2) {
+      scrollAttempts.current = 0;
     }
     debouncedScrollReset();
   }

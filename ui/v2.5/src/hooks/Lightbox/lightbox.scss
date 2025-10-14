@@ -14,6 +14,8 @@
     display: flex;
     flex-shrink: 0;
     height: 4rem;
+    position: relative;
+    z-index: 2; // 确保在display上层
 
     .fa-icon {
       opacity: 0.4;
@@ -89,20 +91,49 @@
     display: flex;
     flex-shrink: 0;
     height: 4.5rem;
+    position: absolute; // 改为绝对定位
+    bottom: 0; // 放置在底部
+    left: 0;
+    right: 0;
+    z-index: 2; // 确保在display上层
+    
+    @media (max-width: 575.98px) {
+      height: 3.5rem; // 移动设备上稍微减小高度
+      font-size: 0.9rem; // 稍微减小字体大小
+    }
 
     & > div {
       flex: 1;
+      display: flex;
+      align-items: center;
 
       &:nth-child(2) {
         overflow-wrap: anywhere;
         text-align: center;
+        justify-content: center;
       }
+    }
+
+    &-center {
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .rating-stars {
       display: flex;
       flex-wrap: nowrap;
       padding-left: 0.38rem;
+      align-items: center;
+      
+      @media (max-width: 575.98px) {
+        padding-left: 0.25rem;
+        // 确保星星在移动设备上有足够的点击区域
+        .rating-star {
+          min-width: 20px;
+          min-height: 20px;
+        }
+      }
     }
 
     .rating-number .text-input {
@@ -111,31 +142,47 @@
 
     &-left {
       display: flex;
-      flex-direction: column;
-      justify-content: start;
+      flex-direction: row;
+      align-items: center;
+      justify-content: flex-start;
       padding-left: 1em;
+      
+      @media (max-width: 575.98px) {
+        padding-left: 0.5em;
+      }
     }
 
     a {
       color: $text-color;
       font-weight: bold;
       text-decoration: none;
+      display: flex;
+      align-items: center;
+      
+      @media (max-width: 575.98px) {
+        font-size: 0.9rem; // 移动设备上稍微减小字体大小
+        font-weight: normal; // 移动设备上使用正常字重
+      }
     }
   }
 
   &-display {
     display: flex;
-    height: 100%;
+    height: 100vh; // 使用视口高度
+    width: 100vw;  // 使用视口宽度
     justify-content: space-between;
-    position: relative;
+    position: absolute; // 改为绝对定位
+    top: 0;
+    left: 0;
+    z-index: 1; // 确保在背景层
   }
 
   &-carousel {
     backface-visibility: hidden;
     display: block;
-    height: 100%;
+    height: 100vh; // 使用视口高度
     position: relative;
-    width: 100%;
+    width: 100vw;  // 使用视口宽度
 
     &-image {
       backface-visibility: hidden;
@@ -145,8 +192,10 @@
       position: absolute;
       top: 0;
       left: 0;
-      width: 100%;
-      height: 100%;
+      width: 100vw; // 使用视口宽度
+      height: 100vh; // 使用视口高度
+      // 移除padding限制，让图片真正占满整个屏幕
+      box-sizing: border-box;
       transform: translate3d(0, 0, 0);
       transition: opacity 500ms ease-in-out;
       will-change: opacity;
@@ -245,13 +294,13 @@
     margin: 0 auto 2rem 0;
     padding: 0 10rem;
     perspective: 1000px;
-    position: relative;
+    position: absolute; // 改为绝对定位
+    bottom: 4.5rem; // 放在footer上方
+    left: 0;
+    right: 0;
     transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     will-change: transform;
-
-    @media (max-height: 800px) {
-      display: none;
-    }
+    z-index: 2; // 确保在display上层
 
     &-selected {
       box-shadow: 0 0 0 6px white;
