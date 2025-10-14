@@ -550,6 +550,7 @@ export const LightboxImage: React.FC<IProps> = ({
       ref={container}
       className={`${CLASSNAME_IMAGE}`}
       onWheel={(e) => onContainerScroll(e)}
+      style={{ willChange: "transform" }}
     >
       {defaultZoom ? (
         <picture

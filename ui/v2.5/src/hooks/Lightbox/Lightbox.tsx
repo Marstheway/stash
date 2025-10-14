@@ -849,12 +849,28 @@ export const LightboxComponent: React.FC<IProps> = ({
             className={cx(CLASSNAME_CAROUSEL, {
               [CLASSNAME_INSTANT]: instantTransition,
             })}
-            style={{ left: `${currentIndex * -100}vw` }}
             ref={carouselRef}
           >
-            {images.map((image, i) => (
-              <div className={`${CLASSNAME_IMAGE}`} key={image.paths.image}>
-                {i >= currentIndex - 1 && i <= currentIndex + 1 ? (
+            {images.map((image, i) => {
+              // 渲染当前图片及相邻图片（用于预加载），但只显示当前图片
+              const isCurrent = i === currentIndex;
+              const isPrev = i === currentIndex - 1;
+              const isNext = i === currentIndex + 1;
+              const shouldRender = isCurrent || isPrev || isNext;
+              
+              if (!shouldRender) return null;
+              
+              return (
+                <div 
+                  className={cx(CLASSNAME_IMAGE, {
+                    'current-image': isCurrent,
+                  })} 
+                  key={image.paths.image}
+                  style={{
+                    opacity: isCurrent ? 1 : 0,
+                    pointerEvents: isCurrent ? 'auto' : 'none',
+                  }}
+                >
                   <LightboxImage
                     src={image.paths.image ?? ""}
                     width={image.visual_files?.[0]?.width ?? 0}
@@ -866,11 +882,11 @@ export const LightboxComponent: React.FC<IProps> = ({
                       GQL.ImageLightboxScrollMode.Zoom
                     }
                     resetPosition={resetPosition}
-                    zoom={i === currentIndex ? zoom : 1}
+                    zoom={zoom}
                     scrollAttemptsBeforeChange={scrollAttemptsBeforeChange}
                     firstScroll={firstScroll}
                     inScrollGroup={inScrollGroup}
-                    current={i === currentIndex}
+                    current={isCurrent}
                     alignBottom={movingLeft}
                     setZoom={updateZoom}
                     debouncedScrollReset={debouncedScrollReset}
@@ -878,9 +894,9 @@ export const LightboxComponent: React.FC<IProps> = ({
                     onRight={handleRight}
                     isVideo={isVideo(image.visual_files?.[0] ?? {})}
                   />
-                ) : undefined}
-              </div>
-            ))}
+                </div>
+              );
+            })}
           </div>
 
           {allowNavigation && (

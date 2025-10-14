@@ -16,13 +16,17 @@
     height: 4rem;
 
     .fa-icon {
+      opacity: 0.4;
+      transform: translate3d(0, 0, 0);
+      transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
       path {
         fill: white;
       }
-      opacity: 0.4;
 
       &:hover {
         opacity: 1;
+        transform: scale(1.1) translate3d(0, 0, 0);
       }
     }
 
@@ -69,7 +73,14 @@
     .fa-icon {
       height: 1.5rem;
       opacity: 1;
+      transform: translate3d(0, 0, 0);
+      transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       width: 1.5rem;
+
+      &:hover {
+        opacity: 0.8;
+        transform: scale(1.1) translate3d(0, 0, 0);
+      }
     }
   }
 
@@ -120,36 +131,69 @@
   }
 
   &-carousel {
-    display: flex;
+    backface-visibility: hidden;
+    display: block;
     height: 100%;
-    position: absolute;
-    transition: left 400ms;
-
-    &-instant {
-      transition-duration: 0ms;
-    }
+    position: relative;
+    width: 100%;
 
     &-image {
+      backface-visibility: hidden;
+      contain: layout paint;
       content-visibility: auto;
       display: flex;
-      width: 100vw;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      transform: translate3d(0, 0, 0);
+      transition: opacity 500ms ease-in-out;
+      will-change: opacity;
+
+      &.prev-image {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      &.next-image {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      &.current-image {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      // 尊重用户的系统无障碍设置
+      @media (prefers-reduced-motion: reduce) {
+        transition: opacity 100ms ease-in-out;
+      }
 
       picture {
+        backface-visibility: hidden;
         display: flex;
         margin: auto;
         position: relative;
+        transform: translate3d(0, 0, 0);
+        will-change: transform;
 
         > div {
           display: flex;
           height: 100%;
           position: absolute;
+          transform: translate3d(0, 0, 0);
           width: 100%;
         }
       }
 
       img {
+        backface-visibility: hidden;
         cursor: pointer;
         object-fit: contain;
+        transform: translate3d(0, 0, 0);
+        will-change: transform;
       }
     }
   }
@@ -160,11 +204,16 @@
   }
 
   &-navbutton {
+    backface-visibility: hidden;
+    transform: translate3d(0, 0, 0);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 1045;
 
     .fa-icon {
       height: 4rem;
       opacity: 0.4;
+      transform: translate3d(0, 0, 0);
+      transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       width: 4rem;
 
       path {
@@ -173,6 +222,7 @@
 
       &:hover {
         opacity: 1;
+        transform: scale(1.1) translate3d(0, 0, 0);
       }
     }
 
@@ -182,18 +232,22 @@
 
     &:hover {
       filter: drop-shadow(2px 2px 2px black);
+      transform: scale(1.05) translate3d(0, 0, 0);
     }
   }
 
   &-nav {
+    backface-visibility: hidden;
     display: flex;
     flex-direction: row;
     flex-shrink: 0;
     height: 10rem;
     margin: 0 auto 2rem 0;
     padding: 0 10rem;
+    perspective: 1000px;
     position: relative;
-    transition: left 400ms;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
 
     @media (max-height: 800px) {
       display: none;
@@ -201,12 +255,20 @@
 
     &-selected {
       box-shadow: 0 0 0 6px white;
+      transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     &-image {
+      backface-visibility: hidden;
       cursor: pointer;
       height: 100%;
       margin-right: 1rem;
+      transform: translate3d(0, 0, 0);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+      &:hover {
+        transform: scale(1.05) translate3d(0, 0, 0);
+      }
     }
   }
 }
