@@ -217,7 +217,7 @@ export const GridCard: React.FC<ICardProps> = (props: ICardProps) => {
           to={props.url}
           className={props.linkClassName}
           onClick={handleImageClick}
-          target={props.url.startsWith("/galleries/") || props.url.startsWith("/scenes/") ? "_blank" : undefined}
+          target="_blank"
         >
           {props.image}
         </Link>
@@ -226,7 +226,7 @@ export const GridCard: React.FC<ICardProps> = (props: ICardProps) => {
       </div>
       {maybeRenderInteractiveHeatmap()}
       <div className="card-section">
-        <Link to={props.url} onClick={handleImageClick} target={props.url.startsWith("/galleries/") || props.url.startsWith("/scenes/") ? "_blank" : undefined}>
+        <Link to={props.url} onClick={handleImageClick} target="_blank">
           <h5 className="card-section-title flex-aligned">
             {props.pretitleIcon}
             <TruncatedText text={props.title} lineCount={2} />
