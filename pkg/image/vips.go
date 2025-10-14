@@ -15,7 +15,7 @@ func (e *vipsEncoder) ImageThumbnail(image *bytes.Buffer, maxSize int) ([]byte, 
 	args := []string{
 		"thumbnail_source",
 		"[descriptor=0]",
-		".webp[Q=75,strip]",
+		".webp[Q=85,strip]",
 		fmt.Sprint(maxSize),
 		"--size", "down",
 	}

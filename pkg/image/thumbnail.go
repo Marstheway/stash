@@ -17,7 +17,7 @@ import (
 	"github.com/stashapp/stash/pkg/models"
 )
 
-const ffmpegImageQuality = 5
+const ffmpegImageQuality = 3
 
 var vipsPath string
 var once sync.Once
