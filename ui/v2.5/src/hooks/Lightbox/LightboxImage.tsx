@@ -583,6 +583,7 @@ export const LightboxImage: React.FC<IProps> = ({
             onPointerDown={onPointerDown}
             onPointerUp={onPointerUp}
             onPointerMove={onPointerMove}
+            loading={current ? undefined : "lazy"}
           />
         </picture>
       ) : undefined}

@@ -922,7 +922,9 @@ export const LightboxComponent: React.FC<IProps> = ({
               const isCurrent = i === currentIndex;
               const isPrev = i === currentIndex - 1;
               const isNext = i === currentIndex + 1;
-              const shouldRender = isCurrent || isPrev || isNext;
+              const isPrev2 = i === currentIndex - 2;
+              const isNext2 = i === currentIndex + 2;
+              const shouldRender = isCurrent || isPrev || isNext || isPrev2 || isNext2;
               
               if (!shouldRender) return null;
               
