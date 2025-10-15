@@ -504,35 +504,48 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
       };
     }, [getPlayer]);
 
-    // Pause protection logic
+    // Pause protection logic - only monitor pause button clicks
     useEffect(() => {
       const player = getPlayer();
       if (!player) return;
 
-      // Listen for play button clicks
-      function handleUserPlay() {
+      // When user clicks play button, reset the flag
+      function handlePlay() {
         setIsUserPaused(false);
       }
 
-      // Listen for pause button clicks directly
+      // When user clicks pause button, set the flag
       function handlePauseButtonClick() {
         setIsUserPaused(true);
       }
 
-      // Add event listener for play event
-      player.on("play", handleUserPlay);
+      // Add play event listener
+      player.on("play", handlePlay);
 
-      // Listen for clicks on the pause button specifically
+      // Listen for clicks on the pause button only
       const controlBar = player.controlBar as any;
       const playToggle = controlBar?.playToggle?.el();
       if (playToggle) {
         playToggle.addEventListener("click", handlePauseButtonClick);
+        playToggle.addEventListener("touchend", handlePauseButtonClick);
+      }
+
+      // Listen for clicks on the big pause button (mobile view)
+      const bigPlayButton = player.el()?.querySelector(".vjs-big-play-button");
+      if (bigPlayButton) {
+        bigPlayButton.addEventListener("click", handlePauseButtonClick);
+        bigPlayButton.addEventListener("touchend", handlePauseButtonClick);
       }
 
       return () => {
-        player.off("play", handleUserPlay);
+        player.off("play", handlePlay);
         if (playToggle) {
           playToggle.removeEventListener("click", handlePauseButtonClick);
+          playToggle.removeEventListener("touchend", handlePauseButtonClick);
+        }
+        if (bigPlayButton) {
+          bigPlayButton.removeEventListener("click", handlePauseButtonClick);
+          bigPlayButton.removeEventListener("touchend", handlePauseButtonClick);
         }
       };
     }, [getPlayer]);
@@ -543,16 +556,19 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
         const player = getPlayer();
         if (!player) return;
 
-        // Check if video is paused but not by user
-        if (player.paused() && !isUserPaused && !player.seeking()) {
-          // Auto-resume playback if paused without user interaction
-          player.play()?.catch(() => {
-            // Silently handle auto-resume failures
+        const isPaused = player.paused();
+
+        // If video is paused but user didn't click pause button, resume playback
+        if (isPaused && !isUserPaused) {
+          player.play()?.catch((error) => {
+            console.error("Auto-resume playback failed:", error);
           });
         }
       }, 1000);
 
-      return () => clearInterval(interval);
+      return () => {
+        clearInterval(interval);
+      };
     }, [getPlayer, isUserPaused]);
 
     // delay before second play event after a play event to adjust for video player issues
