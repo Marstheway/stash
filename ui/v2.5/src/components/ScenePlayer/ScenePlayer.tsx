@@ -752,6 +752,31 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
         if (startPosition) {
           player.currentTime(startPosition);
         }
+
+        // 动态更新跳转值为视频时长的2%
+        if (file.duration) {
+          const twoPercentDuration = Math.round(file.duration * 0.02); // 修正为真正的2%
+          
+          // 直接更新已创建的seekButtons组件配置
+          const seekForward = player.controlBar.seekForward;
+          const seekBack = player.controlBar.seekBack;
+          
+          if (seekForward) {
+            seekForward.options_.seconds = twoPercentDuration;
+            seekForward.controlText(seekForward.localize('Seek forward {{seconds}} seconds')
+              .replace('{{seconds}}', twoPercentDuration));
+            seekForward.removeClass(`skip-${10}`); // 移除旧的class
+            seekForward.addClass(`skip-${twoPercentDuration}`); // 添加新的class
+          }
+          
+          if (seekBack) {
+            seekBack.options_.seconds = twoPercentDuration;
+            seekBack.controlText(seekBack.localize('Seek back {{seconds}} seconds')
+              .replace('{{seconds}}', twoPercentDuration));
+            seekBack.removeClass(`skip-${10}`); // 移除旧的class
+            seekBack.addClass(`skip-${twoPercentDuration}`); // 添加新的class
+          }
+        }
       });
 
       started.current = false;
