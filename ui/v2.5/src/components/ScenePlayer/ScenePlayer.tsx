@@ -235,6 +235,7 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
 
     const [time, setTime] = useState(0);
     const [ready, setReady] = useState(false);
+    const [isUserPaused, setIsUserPaused] = useState(false);
 
     const {
       interactive: interactiveClient,
@@ -502,6 +503,57 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
         player.off("fullscreenchange", fullscreenchange);
       };
     }, [getPlayer]);
+
+    // Pause protection logic
+    useEffect(() => {
+      const player = getPlayer();
+      if (!player) return;
+
+      // Listen for play button clicks
+      function handleUserPlay() {
+        setIsUserPaused(false);
+      }
+
+      // Listen for pause button clicks directly
+      function handlePauseButtonClick() {
+        setIsUserPaused(true);
+      }
+
+      // Add event listener for play event
+      player.on("play", handleUserPlay);
+
+      // Listen for clicks on the pause button specifically
+      const controlBar = player.controlBar as any;
+      const playToggle = controlBar?.playToggle?.el();
+      if (playToggle) {
+        playToggle.addEventListener("click", handlePauseButtonClick);
+      }
+
+      return () => {
+        player.off("play", handleUserPlay);
+        if (playToggle) {
+          playToggle.removeEventListener("click", handlePauseButtonClick);
+        }
+      };
+    }, [getPlayer]);
+
+    // 1-second timer to check pause state
+    useEffect(() => {
+      const interval = setInterval(() => {
+        const player = getPlayer();
+        if (!player) return;
+
+        // Check if video is paused but not by user
+        if (player.paused() && !isUserPaused && !player.seeking()) {
+          // Auto-resume playback if paused without user interaction
+          player.play()?.catch(() => {
+            // Silently handle auto-resume failures
+          });
+        }
+      }, 1000);
+
+      return () => clearInterval(interval);
+    }, [getPlayer, isUserPaused]);
 
     // delay before second play event after a play event to adjust for video player issues
     const DELAY_FOR_SECOND_PLAY_MS = 1000;
