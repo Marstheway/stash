@@ -522,7 +522,7 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
       // Add play event listener
       player.on("play", handlePlay);
 
-      // Listen for clicks on the pause button only
+      // Listen for clicks on the control bar play/pause toggle button
       const controlBar = player.controlBar as any;
       const playToggle = controlBar?.playToggle?.el();
       if (playToggle) {
@@ -530,11 +530,50 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
         playToggle.addEventListener("touchend", handlePauseButtonClick);
       }
 
-      // Listen for clicks on the big pause button (mobile view)
-      const bigPlayButton = player.el()?.querySelector(".vjs-big-play-button");
-      if (bigPlayButton) {
-        bigPlayButton.addEventListener("click", handlePauseButtonClick);
-        bigPlayButton.addEventListener("touchend", handlePauseButtonClick);
+      // Listen for clicks on the big play/pause button (mobile view)
+      // The big button is dynamically added, so we need to wait for it
+      const checkForBigButton = () => {
+        // Look for the big play/pause button
+        const bigPlayPauseButton = player.el()?.querySelector(".vjs-big-play-pause-button");
+        if (bigPlayPauseButton) {
+          bigPlayPauseButton.addEventListener("click", handlePauseButtonClick);
+          bigPlayPauseButton.addEventListener("touchend", handlePauseButtonClick);
+          return true; // Found and attached
+        }
+        
+        // Fallback: look for the big button group and attach to it
+        const bigButtonGroup = player.el()?.querySelector(".vjs-big-button-group");
+        if (bigButtonGroup) {
+          bigButtonGroup.addEventListener("click", handlePauseButtonClick);
+          bigButtonGroup.addEventListener("touchend", handlePauseButtonClick);
+          return true; // Found and attached
+        }
+        
+        return false; // Not found yet
+      };
+
+      // Try to find big button immediately
+      let bigButtonFound = checkForBigButton();
+      
+      // If not found, set up a mutation observer to watch for it
+      if (!bigButtonFound) {
+        const observer = new MutationObserver(() => {
+          if (checkForBigButton()) {
+            observer.disconnect(); // Stop observing once we find it
+          }
+        });
+        
+        if (player.el()) {
+          observer.observe(player.el()!, {
+            childList: true,
+            subtree: true
+          });
+        }
+        
+        // Clean up observer on unmount
+        return () => {
+          observer.disconnect();
+        };
       }
 
       return () => {
@@ -543,9 +582,18 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
           playToggle.removeEventListener("click", handlePauseButtonClick);
           playToggle.removeEventListener("touchend", handlePauseButtonClick);
         }
-        if (bigPlayButton) {
-          bigPlayButton.removeEventListener("click", handlePauseButtonClick);
-          bigPlayButton.removeEventListener("touchend", handlePauseButtonClick);
+        
+        // Clean up big button listeners
+        const bigPlayPauseButton = player.el()?.querySelector(".vjs-big-play-pause-button");
+        if (bigPlayPauseButton) {
+          bigPlayPauseButton.removeEventListener("click", handlePauseButtonClick);
+          bigPlayPauseButton.removeEventListener("touchend", handlePauseButtonClick);
+        }
+        
+        const bigButtonGroup = player.el()?.querySelector(".vjs-big-button-group");
+        if (bigButtonGroup) {
+          bigButtonGroup.removeEventListener("click", handlePauseButtonClick);
+          bigButtonGroup.removeEventListener("touchend", handlePauseButtonClick);
         }
       };
     }, [getPlayer]);
