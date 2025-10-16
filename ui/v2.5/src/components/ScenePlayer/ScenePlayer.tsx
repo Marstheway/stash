@@ -644,7 +644,7 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
           disabled: true,
         },
       };
-      if (!isSafari) {
+      if (!isSafari && ScreenUtils.isMobile()) {
         player.mobileUi(mobileUiOptions);
       }
 
