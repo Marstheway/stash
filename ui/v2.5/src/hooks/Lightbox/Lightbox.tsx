@@ -381,8 +381,9 @@ export const LightboxComponent: React.FC<IProps> = ({
       // 右侧1/3区域：切换下一张图片
       handleRight();
     } else {
-      // 中间区域：直接关闭Lightbox
-      close();
+      // 中间区域：切换header和footer显示状态
+      setShowHeader(prev => !prev);
+      setShowFooter(prev => !prev);
     }
   };
 
