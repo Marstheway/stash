@@ -187,7 +187,7 @@ export const LightboxComponent: React.FC<IProps> = ({
 
   const scrollAttemptsBeforeChange = Math.max(
     0,
-    config?.interface.imageLightbox.scrollAttemptsBeforeChange ?? 1 // 默认改为1，让滚动更敏感
+    config?.interface.imageLightbox.scrollAttemptsBeforeChange ?? 0
   );
 
   function setSlideshowDelay(v: number) {
@@ -340,51 +340,10 @@ export const LightboxComponent: React.FC<IProps> = ({
     Mousetrap.unpause();
   }, [isFullscreen, hide]);
 
-  const handleScreenClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    // 检查点击的是否是具体的UI控件，如果是则忽略
-    const target = e.target as Element;
-    const tagName = target.tagName.toLowerCase();
-    const className = target.className || '';
-    
-    // 如果点击的是按钮、链接、输入框等交互元素，或者具体的UI组件，则忽略
-    // 注意：移除了 img 标签的过滤，让点击图片也能触发切换
-    if (
-      tagName === 'button' || 
-      tagName === 'a' || 
-      tagName === 'input' || 
-      tagName === 'select' || 
-      tagName === 'textarea' ||
-      tagName === 'video' ||
-      // tagName === 'img' ||  // 移除此过滤，允许点击图片切换
-      className.includes('Button') ||
-      className.includes('btn') ||
-      className.includes('Icon') ||
-      className.includes('rating') ||
-      target.closest('button, a, input, select, textarea, video')  // 从closest中也移除了img
-    ) {
-      return;
-    }
-    
-    // 获取点击位置的屏幕坐标
-    const clickX = e.clientX;
-    const screenWidth = window.innerWidth;
-    
-    // 计算三个区域的分界点
-    const leftBoundary = screenWidth / 3;
-    const rightBoundary = (screenWidth * 2) / 3;
-    
-    // 判断点击区域
-    if (clickX < leftBoundary) {
-      // 左侧1/3区域：切换上一张图片
-      handleLeft();
-    } else if (clickX > rightBoundary) {
-      // 右侧1/3区域：切换下一张图片
-      handleRight();
-    } else {
-      // 中间区域：切换header和footer显示状态
-      setShowHeader(prev => !prev);
-      setShowFooter(prev => !prev);
-    }
+  const handleClose = (e: React.MouseEvent<HTMLDivElement>) => {
+    const { className } = e.target as Element;
+    if (className && className.includes && className.includes(CLASSNAME_IMAGE))
+      close();
   };
 
   const handleLeft = useCallback(
@@ -992,7 +951,7 @@ export const LightboxComponent: React.FC<IProps> = ({
       className={CLASSNAME}
       role="presentation"
       ref={containerRef}
-      onClick={handleScreenClick}
+      onClick={handleClose}
     >
       {renderBody()}
     </div>
