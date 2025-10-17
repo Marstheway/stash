@@ -112,7 +112,6 @@ export const LightboxComponent: React.FC<IProps> = ({
   const [showFooter, setShowFooter] = useState(true);
   const [imagesLoaded, setImagesLoaded] = useState(0);
   const [navOffset, setNavOffset] = useState<React.CSSProperties | undefined>();
-  const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
 
   const oldImages = useRef<ILightboxImage[]>([]);
 
@@ -385,45 +384,7 @@ export const LightboxComponent: React.FC<IProps> = ({
     }
   };
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (e.touches.length === 1) {
-      setTouchStart({
-        x: e.touches[0].clientX,
-        y: e.touches[0].clientY
-      });
-    }
-  };
 
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (!touchStart || e.changedTouches.length !== 1) return;
-    
-    const touchEnd = {
-      x: e.changedTouches[0].clientX,
-      y: e.changedTouches[0].clientY
-    };
-    
-    const deltaX = touchEnd.x - touchStart.x;
-    const deltaY = touchEnd.y - touchStart.y;
-    const absDeltaX = Math.abs(deltaX);
-    const absDeltaY = Math.abs(deltaY);
-    
-    // 确保是水平滑动而不是垂直滚动
-    if (absDeltaX > absDeltaY && absDeltaX > 50) {
-      if (deltaX > 0) {
-        // 向右滑动：上一张
-        handleLeft();
-      } else {
-        // 向左滑动：下一张
-        handleRight();
-      }
-    } else if (absDeltaY > absDeltaX && absDeltaY > 50) {
-      // 垂直滑动：切换UI显示
-      setShowHeader(prev => !prev);
-      setShowFooter(prev => !prev);
-    }
-    
-    setTouchStart(null);
-  };
 
   const handleLeft = useCallback(
     (isUserAction = true) => {
