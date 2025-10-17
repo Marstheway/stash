@@ -991,7 +991,7 @@ export const LightboxComponent: React.FC<IProps> = ({
       className={CLASSNAME}
       role="presentation"
       ref={containerRef}
-      onClick={handleClose}
+      onClick={handleScreenClick}
     >
       {renderBody()}
     </div>
