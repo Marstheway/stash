@@ -17,7 +17,9 @@
   - 如果图片小于1MB使用原图，否则使用thumbnail；
   - 支持设置每列图片宽度（原来硬编码300)，默认450，现在可配置；
   - 去掉移动视图下左右两边大约2%的黑边，使图片能充分利用手机屏幕空间；
+- 增加硬件编码支持： hevc, av1
 
+<<<<<<< HEAD
 ### lightbox
 - 图片全屏沉浸式显示，header和footer悬浮在图片之上。
 - 提前加载pre和next图片，提升响应；
@@ -41,6 +43,9 @@
 容器内没有硬件驱动，如需硬件加速，需要自行安装驱动（docker build)
 
 <br><br>
+=======
+容器镜像：ghcr.io/marstheway/stash:v0.28.1-booster。容器内没有硬件驱动，如需硬件加速，需要自行安装驱动（docker build)
+>>>>>>> parent of 9ed05eba (feat: lightbox支持屏幕区域点击行为)
 
 # Stash
 

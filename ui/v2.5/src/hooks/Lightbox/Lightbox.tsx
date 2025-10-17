@@ -27,6 +27,10 @@ import { useInterfaceLocalForage } from "../LocalForage";
 import { imageLightboxDisplayModeIntlMap } from "src/core/enums";
 import { ILightboxImage, IChapter } from "./types";
 import {
+  faArrowLeft,
+  faArrowRight,
+  faChevronLeft,
+  faChevronRight,
   faCog,
   faExpand,
   faPause,
@@ -108,8 +112,6 @@ export const LightboxComponent: React.FC<IProps> = ({
   const [isFullscreen, setFullscreen] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [showChapters, setShowChapters] = useState(false);
-  const [showHeader, setShowHeader] = useState(true);
-  const [showFooter, setShowFooter] = useState(true);
   const [imagesLoaded, setImagesLoaded] = useState(0);
   const [navOffset, setNavOffset] = useState<React.CSSProperties | undefined>();
 
@@ -384,8 +386,6 @@ export const LightboxComponent: React.FC<IProps> = ({
     }
   };
 
-
-
   const handleLeft = useCallback(
     (isUserAction = true) => {
       if (isSwitchingPage || index === -1) return;
@@ -456,11 +456,6 @@ export const LightboxComponent: React.FC<IProps> = ({
       if (e.key === "ArrowLeft") handleLeft();
       else if (e.key === "ArrowRight") handleRight();
       else if (e.key === "Escape") close();
-      else if (e.key === "h" || e.key === "H") {
-        // H键切换header和footer显示
-        setShowHeader(prev => !prev);
-        setShowFooter(prev => !prev);
-      }
     },
     [setInstant, handleLeft, handleRight, close]
   );
@@ -776,8 +771,7 @@ export const LightboxComponent: React.FC<IProps> = ({
 
     return (
       <>
-        {showHeader && (
-          <div className={cx(CLASSNAME_HEADER, { hidden: !showHeader })}>
+        <div className={CLASSNAME_HEADER}>
           <div className={CLASSNAME_LEFT_SPACER}>{renderChapterMenu()}</div>
           <div className={CLASSNAME_INDICATOR}>
             <span>
@@ -869,9 +863,18 @@ export const LightboxComponent: React.FC<IProps> = ({
             </Button>
           </div>
         </div>
-        )}
         <div className={CLASSNAME_DISPLAY}>
-            <div
+          {allowNavigation && (
+            <Button
+              variant="link"
+              onClick={handleLeft}
+              className={`${CLASSNAME_NAVBUTTON} d-none d-lg-block`}
+            >
+              <Icon icon={faChevronLeft} />
+            </Button>
+          )}
+
+          <div
             className={cx(CLASSNAME_CAROUSEL, {
               [CLASSNAME_INSTANT]: instantTransition,
             })}
@@ -925,14 +928,37 @@ export const LightboxComponent: React.FC<IProps> = ({
               );
             })}
           </div>
+
+          {allowNavigation && (
+            <Button
+              variant="link"
+              onClick={handleRight}
+              className={`${CLASSNAME_NAVBUTTON} d-none d-lg-block`}
+            >
+              <Icon icon={faChevronRight} />
+            </Button>
+          )}
         </div>
         {showNavigation && !isFullscreen && images.length > 1 && (
           <div className={CLASSNAME_NAV} style={navOffset} ref={navRef}>
+            <Button
+              variant="link"
+              onClick={() => setIndex(images.length - 1)}
+              className={CLASSNAME_NAVBUTTON}
+            >
+              <Icon icon={faArrowLeft} className="mr-4" />
+            </Button>
             {navItems}
+            <Button
+              variant="link"
+              onClick={() => setIndex(0)}
+              className={CLASSNAME_NAVBUTTON}
+            >
+              <Icon icon={faArrowRight} className="ml-4" />
+            </Button>
           </div>
         )}
-        {showFooter && (
-          <div className={cx(CLASSNAME_FOOTER, { hidden: !showFooter })}>
+        <div className={CLASSNAME_FOOTER}>
           <div className={CLASSNAME_FOOTER_LEFT}>
             {currentImage?.id !== undefined && (
               <RatingSystem
@@ -952,7 +978,6 @@ export const LightboxComponent: React.FC<IProps> = ({
           </div>
           <div></div>
         </div>
-        )}
       </>
     );
   }
@@ -966,7 +991,7 @@ export const LightboxComponent: React.FC<IProps> = ({
       className={CLASSNAME}
       role="presentation"
       ref={containerRef}
-      onClick={handleScreenClick}
+      onClick={handleClose}
     >
       {renderBody()}
     </div>
