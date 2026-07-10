@@ -744,6 +744,11 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
             const isFileTranscode = !isDirect(src);
             const isMp4 = stream.mime_type?.includes("mp4");
 
+            // 移动设备上不提供直接播放
+            if (ScreenUtils.isMobile() && isDirect(src)) {
+              return false;
+            }
+
             return !(isFileTranscode && isMp4) && !(isFileTranscode && isSafari);
           })
           .map((stream) => {
