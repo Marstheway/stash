@@ -511,10 +511,27 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
         if (!started.current && !this.paused()) {
           started.current = true;
         }
+
+        // Clear the native poster attribute once playback starts. The browser
+        // displays the native poster whenever no video frame is available
+        // (e.g. while seeking to an unbuffered position), which makes the
+        // cover image flash on every small seek. The video.js poster layer is
+        // already hidden once playback has started, so removing the native
+        // attribute only suppresses the flashing.
+        this.tech().el().removeAttribute("poster");
       }
 
       function loadstart(this: VideoJsPlayer) {
         setReady(true);
+
+        // Transcode streams (e.g. /stream.webm) reload their source on seek,
+        // which makes video.js reset the has-started state while paused. This
+        // re-shows the poster image during the seek. Once playback has started,
+        // restore the has-started state so the poster stays hidden. Scene
+        // switches reset started.current, so the new scene's poster still shows.
+        if (started.current) {
+          this.hasStarted(true);
+        }
       }
 
       function fullscreenchange(this: VideoJsPlayer) {

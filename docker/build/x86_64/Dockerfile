@@ -11,7 +11,9 @@ COPY Makefile /stash/
 COPY ./graphql /stash/graphql/
 COPY ./ui /stash/ui/
 # pnpm install with npm
-RUN npm install -g pnpm
+# Pin pnpm to the version declared in ui/v2.5/package.json (packageManager).
+# Newer pnpm releases can reject the committed pnpm-lock.yaml on frozen installs.
+RUN npm install -g pnpm@10.30.3
 RUN make pre-ui
 RUN make generate-ui
 ARG GITHASH
