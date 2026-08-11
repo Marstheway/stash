@@ -19,22 +19,12 @@ var (
 	// Hardware codec's
 	VideoCodecN264  = makeVideoCodec("H264 NVENC", "h264_nvenc")
 	VideoCodecN264H = makeVideoCodec("H264 NVENC HQ profile", "h264_nvenc")
-	VideoCodecNHEVC = makeVideoCodec("HEVC NVENC", "hevc_nvenc")
-	VideoCodecNAV1  = makeVideoCodec("AV1 NVENC", "av1_nvenc")
 	VideoCodecI264  = makeVideoCodec("H264 Intel Quick Sync Video (QSV)", "h264_qsv")
 	VideoCodecI264C = makeVideoCodec("H264 Intel Quick Sync Video (QSV) Compatibility profile", "h264_qsv")
-	VideoCodecIHEVC = makeVideoCodec("HEVC Intel Quick Sync Video (QSV)", "hevc_qsv")
-	VideoCodecIAV1  = makeVideoCodec("AV1 Intel Quick Sync Video (QSV)", "av1_qsv")
 	VideoCodecIVP9  = makeVideoCodec("VP9 Intel Quick Sync Video (QSV)", "vp9_qsv")
 	VideoCodecA264  = makeVideoCodec("H264 Advanced Media Framework (AMF)", "h264_amf")
-	VideoCodecAHEVC = makeVideoCodec("HEVC Advanced Media Framework (AMF)", "hevc_amf")
-	VideoCodecAAV1  = makeVideoCodec("AV1 Advanced Media Framework (AMF)", "av1_amf")
 	VideoCodecM264  = makeVideoCodec("H264 VideoToolbox", "h264_videotoolbox")
-	VideoCodecMHEVC = makeVideoCodec("HEVC VideoToolbox", "hevc_videotoolbox")
-	VideoCodecMAV1  = makeVideoCodec("AV1 VideoToolbox", "av1_videotoolbox")
 	VideoCodecV264  = makeVideoCodec("H264 VAAPI", "h264_vaapi")
-	VideoCodecVHEVC = makeVideoCodec("HEVC VAAPI", "hevc_vaapi")
-	VideoCodecVAV1  = makeVideoCodec("AV1 VAAPI", "av1_vaapi")
 	VideoCodecVVP9  = makeVideoCodec("VP9 VAAPI", "vp9_vaapi")
 	VideoCodecVVPX  = makeVideoCodec("VP8 VAAPI", "vp8_vaapi")
 	VideoCodecR264  = makeVideoCodec("H264 V4L2M2M", "h264_v4l2m2m")
@@ -75,43 +65,19 @@ func (f *FFMpeg) initHWSupport(ctx context.Context) {
 	var hwCodecSupport []VideoCodec
 
 	// Note that the first compatible codec is returned, so order is important
-	// Priority: Modern codecs first, then legacy codecs
-	for _, codec := range []VideoCodec{
-		// NVIDIA modern codecs
-		VideoCodecNAV1,
-		VideoCodecNHEVC,
+	// Local hardware codec extensions are tested first (modern codecs first)
+	for _, codec := range append(append([]VideoCodec{}, extraHWCodecPriority()...), []VideoCodec{
 		VideoCodecN264H,
 		VideoCodecN264,
-
-		// Intel modern codecs
-		VideoCodecIAV1,
-		VideoCodecIHEVC,
 		VideoCodecI264,
 		VideoCodecI264C,
-
-		// AMD modern codecs (VAAPI)
-		VideoCodecVAV1,
-		VideoCodecVHEVC,
 		VideoCodecV264,
-		VideoCodecVVP9,
-
-		// AMD legacy codecs (AMF)
-		VideoCodecAAV1,
-		VideoCodecAHEVC,
-		VideoCodecA264,
-
-		// Apple modern codecs
-		VideoCodecMAV1,
-		VideoCodecMHEVC,
-		VideoCodecM264,
-
-		// Other legacy codecs
 		VideoCodecR264,
-		VideoCodecO264,
 		VideoCodecRK264,
-		VideoCodecVVPX,
 		VideoCodecIVP9,
-	} {
+		VideoCodecVVP9,
+		VideoCodecM264,
+	}...) {
 		var args Args
 		args = append(args, "-hide_banner")
 		args = args.LogLevel(LogLevelWarning)
@@ -231,12 +197,14 @@ func (f *FFMpeg) hwDeviceInit(args Args, toCodec VideoCodec, fullhw bool) Args {
 		driDevice = "/dev/dri/renderD128"
 	}
 
+	// Local hardware codec extensions (see hwcodec_extra.go)
+	if args, ok := extraHWDeviceInit(args, toCodec, fullhw); ok {
+		return args
+	}
+
 	switch toCodec {
-	// NVIDIA codecs
 	case VideoCodecN264,
-		VideoCodecN264H,
-		VideoCodecNHEVC,
-		VideoCodecNAV1:
+		VideoCodecN264H:
 		args = append(args, "-hwaccel_device")
 		args = append(args, "0")
 		if fullhw {
@@ -248,12 +216,8 @@ func (f *FFMpeg) hwDeviceInit(args Args, toCodec VideoCodec, fullhw bool) Args {
 			args = append(args, "cuda")
 		}
 
-	// VAAPI codecs (AMD/Intel)
 	case VideoCodecV264,
-		VideoCodecVHEVC,
-		VideoCodecVAV1,
-		VideoCodecVVP9,
-		VideoCodecVVPX:
+		VideoCodecVVP9:
 		args = append(args, "-vaapi_device")
 		args = append(args, driDevice)
 		if fullhw {
@@ -266,8 +230,6 @@ func (f *FFMpeg) hwDeviceInit(args Args, toCodec VideoCodec, fullhw bool) Args {
 	// Intel QSV codecs
 	case VideoCodecI264,
 		VideoCodecI264C,
-		VideoCodecIHEVC,
-		VideoCodecIAV1,
 		VideoCodecIVP9:
 		if fullhw {
 			args = append(args, "-hwaccel")
@@ -282,9 +244,7 @@ func (f *FFMpeg) hwDeviceInit(args Args, toCodec VideoCodec, fullhw bool) Args {
 		}
 
 	// Apple VideoToolbox codecs
-	case VideoCodecM264,
-		VideoCodecMHEVC,
-		VideoCodecMAV1:
+	case VideoCodecM264:
 		if fullhw {
 			args = append(args, "-hwaccel")
 			args = append(args, "videotoolbox")
@@ -294,22 +254,6 @@ func (f *FFMpeg) hwDeviceInit(args Args, toCodec VideoCodec, fullhw bool) Args {
 			args = append(args, "-init_hw_device")
 			args = append(args, "videotoolbox=vt")
 		}
-
-	// AMD AMF codecs
-	case VideoCodecA264,
-		VideoCodecAHEVC,
-		VideoCodecAAV1:
-		// AMF uses software decoding with hardware encoding
-		// No special hardware acceleration needed for decoding
-		if fullhw {
-			// For AMF, full hardware transcode is not typically supported
-			// Use software decoding with hardware encoding
-		}
-
-	// Legacy codecs - no special hardware initialization needed
-	case VideoCodecR264,
-		VideoCodecO264:
-		// V4L2M2M and OMX don't require special hardware initialization
 
 	case VideoCodecRK264:
 		// Rockchip: always create rkmpp device and make it the filter device, so
@@ -332,57 +276,39 @@ func (f *FFMpeg) hwDeviceInit(args Args, toCodec VideoCodec, fullhw bool) Args {
 // Initialise a video filter for HW encoding
 func (f *FFMpeg) hwFilterInit(toCodec VideoCodec, fullhw bool) VideoFilter {
 	var videoFilter VideoFilter
+
+	// Local hardware codec extensions (see hwcodec_extra.go)
+	if vf, ok := extraHWFilterInit(toCodec, fullhw); ok {
+		return vf
+	}
+
 	switch toCodec {
-	// VAAPI codecs (AMD/Intel)
 	case VideoCodecV264,
-		VideoCodecVHEVC,
-		VideoCodecVAV1,
-		VideoCodecVVP9,
-		VideoCodecVVPX:
+		VideoCodecVVP9:
 		if !fullhw {
 			videoFilter = videoFilter.Append("format=nv12")
 			videoFilter = videoFilter.Append("hwupload")
 		}
 
-	// NVIDIA codecs
-	case VideoCodecN264, VideoCodecN264H,
-		VideoCodecNHEVC, VideoCodecNAV1:
+	case VideoCodecN264, VideoCodecN264H:
 		if !fullhw {
 			videoFilter = videoFilter.Append("format=nv12")
 			videoFilter = videoFilter.Append("hwupload_cuda")
 		}
 
-	// Intel QSV codecs
 	case VideoCodecI264,
 		VideoCodecI264C,
-		VideoCodecIHEVC,
-		VideoCodecIAV1,
 		VideoCodecIVP9:
 		if !fullhw {
 			videoFilter = videoFilter.Append("hwupload=extra_hw_frames=64")
 			videoFilter = videoFilter.Append("format=qsv")
 		}
 
-	// Apple VideoToolbox codecs
-	case VideoCodecM264,
-		VideoCodecMHEVC,
-		VideoCodecMAV1:
+	case VideoCodecM264:
 		if !fullhw {
 			videoFilter = videoFilter.Append("format=nv12")
 			videoFilter = videoFilter.Append("hwupload")
 		}
-
-	// AMD AMF codecs
-	case VideoCodecA264,
-		VideoCodecAHEVC,
-		VideoCodecAAV1:
-		// AMF typically uses software decoding, so no special filter needed
-		// The format conversion is handled by the encoder
-
-	// Legacy codecs
-	case VideoCodecR264,
-		VideoCodecO264:
-		// V4L2M2M and OMX don't require special filter initialization
 
 	case VideoCodecRK264:
 		// For Rockchip full-hw, do NOT pre-map to rkrga here. scale_rkrga can
@@ -456,36 +382,26 @@ func (f *FFMpeg) hwCodecFilter(args VideoFilter, codec VideoCodec, vf *models.Vi
 
 // Apply format switching if applicable
 func (f *FFMpeg) hwApplyFullHWFilter(args VideoFilter, codec VideoCodec, fullhw bool) VideoFilter {
+	// Local hardware codec extensions (see hwcodec_extra.go)
+	if vf, ok := extraHWApplyFullHWFilter(args, codec, fullhw, f.version); ok {
+		return vf
+	}
+
 	switch codec {
-	// NVIDIA codecs
-	case VideoCodecN264, VideoCodecN264H,
-		VideoCodecNHEVC, VideoCodecNAV1:
+	case VideoCodecN264, VideoCodecN264H:
 		if fullhw && f.version.Gteq(Version{major: 5}) { // Added in FFMpeg 5
 			args = args.Append("scale_cuda=format=yuv420p")
 		}
 
-	// VAAPI codecs (AMD/Intel)
-	case VideoCodecV264, VideoCodecVVP9,
-		VideoCodecVHEVC, VideoCodecVAV1:
+	case VideoCodecV264, VideoCodecVVP9:
 		if fullhw && f.version.Gteq(Version{major: 3, minor: 1}) { // Added in FFMpeg 3.1
 			args = args.Append("scale_vaapi=format=nv12")
 		}
 
-	// Intel QSV codecs
-	case VideoCodecI264, VideoCodecI264C, VideoCodecIVP9,
-		VideoCodecIHEVC, VideoCodecIAV1:
+	case VideoCodecI264, VideoCodecI264C, VideoCodecIVP9:
 		if fullhw && f.version.Gteq(Version{major: 3, minor: 3}) { // Added in FFMpeg 3.3
 			args = args.Append("scale_qsv=format=nv12")
 		}
-
-	// Apple VideoToolbox codecs
-	case VideoCodecM264, VideoCodecMHEVC, VideoCodecMAV1:
-		if fullhw && f.version.Gteq(Version{major: 4, minor: 3}) { // Added in FFMpeg 4.3
-			args = args.Append("scale_vt=format=nv12")
-		}
-
-	// AMD AMF codecs - typically don't support full hardware scaling
-	// Legacy codecs - no hardware scaling support
 
 	case VideoCodecRK264:
 		// Full-hw decode on 10-bit sources often produces DRM_PRIME with sw_pix_fmt=nv15.
@@ -500,35 +416,33 @@ func (f *FFMpeg) hwApplyFullHWFilter(args VideoFilter, codec VideoCodec, fullhw 
 
 // Switch scaler
 func (f *FFMpeg) hwApplyScaleTemplate(sargs string, codec VideoCodec, match []int, vf *models.VideoFile, fullhw bool) VideoFilter {
+	// Local hardware codec extensions (see hwcodec_extra.go)
+	if vf2, ok := extraHWApplyScaleTemplate(sargs, codec, match, vf, fullhw, f.version); ok {
+		return vf2
+	}
+
 	var template string
 
 	switch codec {
-	// NVIDIA codecs
-	case VideoCodecN264, VideoCodecN264H,
-		VideoCodecNHEVC, VideoCodecNAV1:
+	case VideoCodecN264, VideoCodecN264H:
 		template = "scale_cuda=$value"
 		if fullhw && f.version.Gteq(Version{major: 5}) { // Added in FFMpeg 5
 			template += ":format=yuv420p"
 		}
 
-	// VAAPI codecs (AMD/Intel)
-	case VideoCodecV264, VideoCodecVVP9,
-		VideoCodecVHEVC, VideoCodecVAV1:
+	case VideoCodecV264, VideoCodecVVP9:
 		template = "scale_vaapi=$value"
 		if fullhw && f.version.Gteq(Version{major: 3, minor: 1}) { // Added in FFMpeg 3.1
 			template += ":format=nv12"
 		}
 
-	// Intel QSV codecs
-	case VideoCodecI264, VideoCodecI264C, VideoCodecIVP9,
-		VideoCodecIHEVC, VideoCodecIAV1:
+	case VideoCodecI264, VideoCodecI264C, VideoCodecIVP9:
 		template = "scale_qsv=$value"
 		if fullhw && f.version.Gteq(Version{major: 3, minor: 3}) { // Added in FFMpeg 3.3
 			template += ":format=nv12"
 		}
 
-	// Apple VideoToolbox codecs
-	case VideoCodecM264, VideoCodecMHEVC, VideoCodecMAV1:
+	case VideoCodecM264:
 		template = "scale_vt=$value"
 
 	case VideoCodecRK264:
@@ -540,40 +454,33 @@ func (f *FFMpeg) hwApplyScaleTemplate(sargs string, codec VideoCodec, match []in
 		// frame directly to the encoder. This is more efficient but may be less stable.
 		template = "scale_rkrga=$value:format=nv12"
 
-	// AMD AMF and legacy codecs - use software scaling
 	default:
 		return VideoFilter(sargs)
 	}
 
 	// BUG: [scale_qsv]: Size values less than -1 are not acceptable.
-	isIntel := codec == VideoCodecI264 || codec == VideoCodecI264C || codec == VideoCodecIVP9 ||
-		codec == VideoCodecIHEVC || codec == VideoCodecIAV1
+	isIntel := codec == VideoCodecI264 || codec == VideoCodecI264C || codec == VideoCodecIVP9
 	// BUG: scale_vt doesn't call ff_scale_adjust_dimensions, thus cant accept negative size values
-	isApple := codec == VideoCodecM264 || codec == VideoCodecMHEVC || codec == VideoCodecMAV1
+	isApple := codec == VideoCodecM264
 	// Rockchip's scale_rkrga supports -1/-2; don't apply minus-one hack here.
 	return VideoFilter(templateReplaceScale(sargs, template, match, vf, isIntel || isApple))
 }
 
 // Returns the max resolution for a given codec, or a default
 func (f *FFMpeg) hwCodecMaxRes(codec VideoCodec) (int, int) {
+	// Local hardware codec extensions and overrides (see hwcodec_extra.go)
+	if w, h, ok := extraHWCodecMaxRes(codec); ok {
+		return w, h
+	}
+
 	switch codec {
-	// Modern codecs with 8K support
-	case VideoCodecNHEVC, VideoCodecNAV1,
-		VideoCodecIHEVC, VideoCodecIAV1,
-		VideoCodecVHEVC, VideoCodecVAV1,
-		VideoCodecAHEVC, VideoCodecAAV1,
-		VideoCodecMHEVC, VideoCodecMAV1,
-		VideoCodecRK264:
-		return 8192, 8192 // 8K support
-
-	// Legacy codecs with 4K support
-	case VideoCodecN264, VideoCodecN264H,
-		VideoCodecI264, VideoCodecI264C,
-		VideoCodecV264, VideoCodecVVP9,
-		VideoCodecA264, VideoCodecM264:
-		return 4096, 4096 // 4K support
-
-	// Other codecs - use default resolution
+	case VideoCodecRK264:
+		return 8192, 8192
+	case VideoCodecN264,
+		VideoCodecN264H,
+		VideoCodecI264,
+		VideoCodecI264C:
+		return 4096, 4096
 	}
 
 	return 0, 0
@@ -601,19 +508,15 @@ func (f *FFMpeg) hwCodecHLSCompatible() *VideoCodec {
 			VideoCodecI264C,
 			VideoCodecV264,
 			VideoCodecR264,
-			VideoCodecA264,
 			VideoCodecM264, // Note that the Apple encoder sucks at startup, thus HLS quality is crap
 			VideoCodecRK264:
 			return &element
-
-		// HEVC codecs (modern HLS support)
-		case VideoCodecNHEVC,
-			VideoCodecIHEVC,
-			VideoCodecVHEVC,
-			VideoCodecAHEVC,
-			VideoCodecMHEVC:
-			return &element
 		}
+	}
+
+	// Local hardware codec extensions (see hwcodec_extra.go)
+	if c := extraHLSCompatible(f.getHWCodecSupport()); c != nil {
+		return c
 	}
 	return nil
 }
@@ -631,21 +534,12 @@ func (f *FFMpeg) hwCodecMP4Compatible() *VideoCodec {
 			VideoCodecM264,
 			VideoCodecRK264:
 			return &element
-
-		// HEVC codecs (modern MP4 support)
-		case VideoCodecNHEVC,
-			VideoCodecIHEVC,
-			VideoCodecAHEVC,
-			VideoCodecMHEVC:
-			return &element
-
-		// AV1 codecs (latest MP4 support)
-		case VideoCodecNAV1,
-			VideoCodecIAV1,
-			VideoCodecAAV1,
-			VideoCodecMAV1:
-			return &element
 		}
+	}
+
+	// Local hardware codec extensions (see hwcodec_extra.go)
+	if c := extraMP4Compatible(f.getHWCodecSupport()); c != nil {
+		return c
 	}
 	return nil
 }
@@ -658,15 +552,12 @@ func (f *FFMpeg) hwCodecWEBMCompatible() *VideoCodec {
 		case VideoCodecIVP9,
 			VideoCodecVVP9:
 			return &element
-
-		// AV1 codecs (modern WebM support)
-		case VideoCodecNAV1,
-			VideoCodecIAV1,
-			VideoCodecAAV1,
-			VideoCodecMAV1,
-			VideoCodecVAV1:
-			return &element
 		}
+	}
+
+	// Local hardware codec extensions (see hwcodec_extra.go)
+	if c := extraWEBMCompatible(f.getHWCodecSupport()); c != nil {
+		return c
 	}
 	return nil
 }

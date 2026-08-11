@@ -22,6 +22,12 @@ type StreamFormat struct {
 func CodecInit(codec VideoCodec) (args Args) {
 	args = args.VideoCodec(codec)
 
+	// Local hardware codec extensions (see hwcodec_extra.go)
+	if extraArgs, ok := extraCodecInit(codec); ok {
+		args = append(args, extraArgs...)
+		return args
+	}
+
 	switch codec {
 	// CPU Codecs
 	case VideoCodecLibX264:
@@ -60,18 +66,6 @@ func CodecInit(codec VideoCodec) (args Args) {
 			"-coder", "cabac",
 			"-b_ref_mode", "middle",
 		)
-	case VideoCodecNHEVC:
-		args = append(args,
-			"-rc", "vbr",
-			"-cq", "15",
-			"-preset", "p4",
-		)
-	case VideoCodecNAV1:
-		args = append(args,
-			"-rc", "vbr",
-			"-cq", "20",
-			"-preset", "p4",
-		)
 	case VideoCodecI264, VideoCodecIVP9:
 		args = append(args,
 			"-global_quality", "20",
@@ -82,49 +76,15 @@ func CodecInit(codec VideoCodec) (args Args) {
 			"-q", "20",
 			"-preset", "faster",
 		)
-	case VideoCodecIHEVC:
-		args = append(args,
-			"-global_quality", "20",
-			"-preset", "faster",
-		)
-	case VideoCodecIAV1:
-		args = append(args,
-			"-global_quality", "25",
-			"-preset", "faster",
-		)
 	case VideoCodecV264, VideoCodecVVP9:
 		args = append(args,
 			"-qp", "20",
-		)
-	case VideoCodecVHEVC:
-		args = append(args,
-			"-qp", "20",
-		)
-	case VideoCodecVAV1:
-		args = append(args,
-			"-qp", "25",
 		)
 	case VideoCodecA264:
 		args = append(args,
 			"-quality", "speed",
 		)
-	case VideoCodecAHEVC:
-		args = append(args,
-			"-quality", "speed",
-		)
-	case VideoCodecAAV1:
-		args = append(args,
-			"-quality", "balanced",
-		)
 	case VideoCodecM264:
-		args = append(args,
-			"-realtime", "1",
-		)
-	case VideoCodecMHEVC:
-		args = append(args,
-			"-realtime", "1",
-		)
-	case VideoCodecMAV1:
 		args = append(args,
 			"-realtime", "1",
 		)
@@ -217,31 +177,17 @@ func (o TranscodeOptions) FileGetCodec(sm *StreamManager, maxTranscodeSize int) 
 	switch o.StreamType.MimeType {
 	case MimeMp4Video:
 		// Check for native format support to avoid unnecessary transcoding
-		if !needsResize {
-			switch o.VideoFile.VideoCodec {
-			case H264:
-				return VideoCodecCopy
-			case Hevc, H265:
-				// HEVC in MP4 is widely supported by modern browsers
-				return VideoCodecCopy
-			case Av1:
-				// AV1 in MP4 is supported by modern browsers
-				return VideoCodecCopy
-			}
+		// (extraCopyCompatible handles the local HEVC/AV1 extensions)
+		if !needsResize && (o.VideoFile.VideoCodec == H264 || extraCopyCompatible(o.VideoFile.VideoCodec, Mp4)) {
+			return VideoCodecCopy
 		}
 		codec = VideoCodecLibX264
 		if hwcodec := sm.encoder.hwCodecMP4Compatible(); hwcodec != nil && sm.config.GetTranscodeHardwareAcceleration() {
 			codec = *hwcodec
 		}
 	case MimeWebmVideo:
-		if !needsResize {
-			switch o.VideoFile.VideoCodec {
-			case Vp8, Vp9:
-				return VideoCodecCopy
-			case Av1:
-				// AV1 in WebM is supported by modern browsers
-				return VideoCodecCopy
-			}
+		if !needsResize && ((o.VideoFile.VideoCodec == Vp8 || o.VideoFile.VideoCodec == Vp9) || extraCopyCompatible(o.VideoFile.VideoCodec, Webm)) {
+			return VideoCodecCopy
 		}
 		codec = VideoCodecVP9
 		if hwcodec := sm.encoder.hwCodecWEBMCompatible(); hwcodec != nil && sm.config.GetTranscodeHardwareAcceleration() {
