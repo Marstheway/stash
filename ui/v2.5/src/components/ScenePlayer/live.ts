@@ -68,6 +68,11 @@ function offsetMiddleware(player: VideoJsPlayer) {
       tech.setPlaybackRate(playbackRate);
       tech.one("canplay", () => {
         player.poster(poster);
+        // Restoring the poster calls techCall_('setPoster'), which re-sets the
+        // native <video> poster attribute. The browser displays that poster
+        // whenever no video frame is available yet (common right after a
+        // transcode stream reload), so remove the attribute again immediately.
+        tech.el()?.removeAttribute("poster");
         if (seeking === 1 || tech.scrubbing()) {
           tech.pause();
         }

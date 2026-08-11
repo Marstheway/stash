@@ -33,17 +33,19 @@ class MarkersPlugin extends videojs.getPlugin("plugin") {
       tooltip.className = "vjs-marker-tooltip";
       tooltip.style.visibility = "hidden";
 
+      // player.el() can be null if the player was disposed while this
+      // ready callback was queued asynchronously
       const parent = player
         .el()
-        .querySelector(".vjs-progress-holder .vjs-mouse-display");
+        ?.querySelector(".vjs-progress-holder .vjs-mouse-display");
       if (parent) parent.appendChild(tooltip);
       this.markerTooltip = tooltip;
 
       this.defaultTooltip = player
         .el()
-        .querySelector<HTMLElement>(
+        ?.querySelector<HTMLElement>(
           ".vjs-progress-holder .vjs-mouse-display .vjs-time-tooltip"
-        );
+        ) ?? null;
     });
   }
 
@@ -67,7 +69,7 @@ class MarkersPlugin extends videojs.getPlugin("plugin") {
       dot?: HTMLDivElement;
       range?: HTMLDivElement;
     } = {};
-    const seekBar = this.player.el().querySelector(".vjs-progress-holder");
+    const seekBar = this.player.el()?.querySelector(".vjs-progress-holder");
 
     markerSet.dot = videojs.dom.createEl("div") as HTMLDivElement;
     markerSet.dot.className = "vjs-marker";
@@ -117,8 +119,10 @@ class MarkersPlugin extends videojs.getPlugin("plugin") {
 
   private renderRangeMarkers(markers: IMarker[], layer: number) {
     const duration = this.player.duration();
-    const parent = this.player.el().querySelector(".vjs-progress-control");
-    const seekBar = this.player.el().querySelector(".vjs-progress-holder");
+    const parent = this.player
+      .el()
+      ?.querySelector(".vjs-progress-control");
+    const seekBar = this.player.el()?.querySelector(".vjs-progress-holder");
     if (!seekBar || !parent || !duration) return;
 
     markers.forEach((marker) => {

@@ -270,6 +270,9 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
     const started = useRef(false);
     const auto = useRef(false);
     const interactiveReady = useRef(false);
+    // Tracks the last poster value applied to the player so the poster effect
+    // can skip re-applying an unchanged poster (see the poster effect below).
+    const lastPoster = useRef<string | undefined>(undefined);
     const minimumPlayPercent = uiConfig?.minimumPlayPercent ?? 0;
     const trackActivity = uiConfig?.trackActivity ?? true;
     const vrTag = uiConfig?.vrTag ?? undefined;
@@ -437,6 +440,8 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
 
         // reset sceneId to force reload sources
         sceneId.current = undefined;
+        // reset last poster so the new player re-applies it
+        lastPoster.current = undefined;
       };
       // empty deps - only init once
       // showAbLoopControls is necessary to re-init the player when the config changes
@@ -516,8 +521,10 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
         // (e.g. while seeking to an unbuffered position), which makes the
         // cover image flash on every small seek. The video.js poster layer is
         // already hidden once playback has started, so removing the native
-        // attribute only suppresses the flashing.
-        this.tech().el().removeAttribute("poster");
+        // attribute only suppresses the flashing. Pass true to tech() to
+        // silence video.js's "using the tech directly" warning; guard against
+        // the tech being disposed.
+        this.tech(true)?.el()?.removeAttribute("poster");
       }
 
       function loadstart(this: VideoJsPlayer) {
@@ -811,10 +818,17 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
       const player = getPlayer();
       if (!player) return;
 
-      if (scene.paths.screenshot) {
-        player.poster(scene.paths.screenshot);
-      } else {
-        player.poster("");
+      // Only re-apply the poster when the value actually changes. The effect
+      // re-runs whenever its dependencies get new references (e.g. parent
+      // re-renders from Apollo cache updates), and calling player.poster()
+      // unconditionally would re-set the native <video> poster attribute.
+      // During a transcode seek the source is reloading (readyState 0), so the
+      // browser would show that poster as a cover flash until the first frame
+      // arrives. Tracking the last value makes repeated effect runs no-ops.
+      const poster = scene.paths.screenshot ?? "";
+      if (lastPoster.current !== poster) {
+        lastPoster.current = poster;
+        player.poster(poster);
       }
 
       // Define the event handler outside the useEffect
