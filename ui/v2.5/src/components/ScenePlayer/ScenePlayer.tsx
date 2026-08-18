@@ -49,6 +49,7 @@ import airplay from "@silvermine/videojs-airplay";
 import chromecast from "@silvermine/videojs-chromecast";
 import abLoopPlugin from "videojs-abloop";
 import ScreenUtils from "src/utils/screen";
+import { useHideDirectStreams } from "src/utils/useHideDirectStreams";
 import { PatchComponent } from "src/patch";
 
 // register videojs plugins
@@ -266,6 +267,8 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
 
     const [fullscreen, setFullscreen] = useState(false);
     const [showScrubber, setShowScrubber] = useState(false);
+    const { hide: hideDirectStreams, ready: hideDirectReady } =
+      useHideDirectStreams();
 
     const started = useRef(false);
     const auto = useRef(false);
@@ -603,7 +606,8 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
       if (!player) return;
 
       // don't re-initialise the player unless the scene has changed
-      if (!file || scene.id === sceneId.current) return;
+      // 等待 Windows ARM 检测完成后再初始化，避免直接流过滤状态未定
+      if (!file || scene.id === sceneId.current || !hideDirectReady) return;
 
       sceneId.current = scene.id;
 
@@ -651,8 +655,8 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
             const isFileTranscode = !isDirect(src);
             const isMp4 = stream.mime_type?.includes("mp4");
 
-            // 移动设备上不提供直接播放
-            if (ScreenUtils.isMobile() && isDirect(src)) {
+            // 窄屏移动端或 Windows ARM（如 Surface Pro X）不提供直接播放
+            if (hideDirectStreams && isDirect(src)) {
               return false;
             }
 
@@ -760,6 +764,8 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
       uiConfig?.alwaysStartFromBeginning,
       uiConfig?.disableMobileMediaAutoRotateEnabled,
       _initialTimestamp,
+      hideDirectStreams,
+      hideDirectReady,
     ]);
 
     useEffect(() => {
