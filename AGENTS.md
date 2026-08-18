@@ -9,54 +9,13 @@ docker build --build-arg GITHASH=$(git rev-parse --short HEAD) --build-arg STASH
 
 ## 部署到本机 (booster)
 
-### 1. 修改 booster 的 Dockerfile
-
-路径：`/data/nas/area1/Pandora/booster/stash/Dockerfile`
-
-```dockerfile
-FROM stash:local
-
-WORKDIR .
-
-COPY requirements.txt .
-
-RUN apk add --no-cache mesa-va-gallium libva-utils mesa-dri-gallium python3 py3-pip && \
-    ln -sf /usr/bin/python3 /usr/bin/python && \
-    pip3 install --break-system-packages --no-cache-dir -r requirements.txt
-```
-
-### 2. 修改 docker-compose.yml
-
-路径：`/data/nas/area1/Pandora/booster/docker-compose.yml`
-
-- 设置 `pull: false`（避免尝试从 registry 拉取本地镜像）
-- 添加数据库 SSD 挂载：`/data/service/stash/db:/db`
-
-### 3. 数据库迁移到 SSD
-
-将 SQLite 数据库迁移到本地 SSD，减少 NFS 网络开销：
-
-```bash
-mkdir -p /data/service/stash/db
-rsync -av /data/nas/area1/Pandora/stash/stash-go.sqlite* /data/service/stash/db/
-```
-
-修改 `config.yml`：
-```yaml
-database: /db/stash-go.sqlite
-```
-
-### 4. 重建并启动
-
 ```bash
 cd /data/nas/area1/Pandora/booster
 docker compose build stash
 docker compose up -d stash
 ```
 
-## 备份
-
-`~/bin/backup.sh` 已配置每周自动将 SSD 数据库同步到 NFS 原位置。
+部署现状：booster 已配置 `pull: false` 使用本地镜像；SQLite 数据库在本机 SSD（`/data/service/stash/db/`），`~/bin/backup.sh` 每周自动同步到 NFS。
 
 ## 开发准则
 
