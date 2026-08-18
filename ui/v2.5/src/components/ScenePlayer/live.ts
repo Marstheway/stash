@@ -73,10 +73,18 @@ function offsetMiddleware(player: VideoJsPlayer) {
         // whenever no video frame is available yet (common right after a
         // transcode stream reload), so remove the attribute again immediately.
         tech.el()?.removeAttribute("poster");
-        if (seeking === 1 || tech.scrubbing()) {
-          tech.pause();
-        }
+        // seeking: 1 = stay paused, 2 = resume after reload.
+        // video.js SeekBar pauses on mousedown and calls play() on mouseup.
+        // That play() hits callPlay() while seeking is still set, which
+        // upgrades 1 → 2 and swallows the play. Resume here or the video
+        // stays paused after a progress-bar seek on transcode sources.
+        const shouldPause = seeking === 1 || tech.scrubbing();
         seeking = 0;
+        if (shouldPause) {
+          tech.pause();
+        } else {
+          tech.play();
+        }
       });
       tech.trigger("timeupdate");
       tech.trigger("pause");
