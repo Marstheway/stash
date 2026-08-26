@@ -33,6 +33,7 @@ export interface ILightboxImage {
   paths: IImagePaths;
   visual_files?: IFiles[];
   galleries?: GQL.Maybe<IGallery[]>;
+  tags?: { id: string; name: string }[];
 }
 
 export interface IChapter {

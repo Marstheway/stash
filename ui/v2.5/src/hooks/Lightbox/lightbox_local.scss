@@ -1,0 +1,30 @@
+.Lightbox-footer-right {
+  align-items: center;
+  display: flex;
+  justify-content: flex-end;
+  padding-right: 1em;
+}
+
+.Lightbox-tag-toggles {
+  align-items: center;
+  display: flex;
+}
+
+// Same language as the official favorite heart: muted outline off, color fill on.
+.Lightbox-tag-toggle.btn.minimal {
+  &.is-off {
+    color: rgba(191, 204, 214, 0.5);
+  }
+
+  &.is-on.wallpaper {
+    color: #5bc0de;
+  }
+
+  &.is-on.sexy {
+    color: #ff7373;
+  }
+
+  &:disabled {
+    opacity: 1;
+  }
+}

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Form } from "react-bootstrap";
 import { useImagesDestroy } from "src/core/StashService";
 import * as GQL from "src/core/generated-graphql";
@@ -8,8 +8,13 @@ import { useConfigurationContext } from "src/hooks/Config";
 import { FormattedMessage, useIntl } from "react-intl";
 import { faTrashAlt } from "@fortawesome/free-solid-svg-icons";
 
+interface IImageForDeletion {
+  id: string;
+  visual_files: { path: string }[];
+}
+
 interface IDeleteImageDialogProps {
-  selected: GQL.SlimImageDataFragment[];
+  selected: IImageForDeletion[];
   onClose: (confirmed: boolean) => void;
 }
 
@@ -67,6 +72,17 @@ export const DeleteImagesDialog: React.FC<IDeleteImageDialogProps> = (
     setIsDeleting(false);
     props.onClose(true);
   }
+
+  const onDeleteRef = useRef(onDelete);
+  onDeleteRef.current = onDelete;
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Enter" && !isDeleting) onDeleteRef.current();
+    };
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [isDeleting]);
 
   function maybeRenderDeleteFileAlert() {
     if (!deleteFile) {

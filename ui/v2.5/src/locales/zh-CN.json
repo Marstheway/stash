@@ -718,6 +718,10 @@
             "image_lightbox": {
                 "heading": "图片灯箱"
             },
+            "autostart_gallery_slideshow": {
+                "description": "从图库页面打开图库灯箱时自动开始幻灯片播放。",
+                "heading": "自动开始图库幻灯片"
+            },
             "image_wall": {
                 "direction": "方向",
                 "heading": "图片墙",
