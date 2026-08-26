@@ -7,6 +7,8 @@ cd /data/workspace/stash
 docker build --build-arg GITHASH=$(git rev-parse --short HEAD) --build-arg STASH_VERSION=local -t stash:local -f docker/build/x86_64/Dockerfile .
 ```
 
+只改 UI 时，pnpm / `go mod download` 应走缓存；只有 lockfile 或 `go.mod` 变了才会重新下载。
+
 ## 部署到本机 (booster)
 
 ```bash
@@ -14,6 +16,8 @@ cd /data/nas/area1/Pandora/booster
 docker compose build stash
 docker compose up -d stash
 ```
+
+compose 的 Python/GPU 依赖装在独立层，不跟 `stash:local` 绑定；每次只拷贝新二进制，不应再 `pip install`。
 
 部署现状：booster 已配置 `pull: false` 使用本地镜像；SQLite 数据库在本机 SSD（`/data/service/stash/db/`），`~/bin/backup.sh` 每周自动同步到 NFS。
 
