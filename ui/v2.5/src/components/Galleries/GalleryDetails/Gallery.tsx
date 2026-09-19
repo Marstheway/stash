@@ -21,6 +21,10 @@ import { Icon } from "src/components/Shared/Icon";
 import { Counter } from "src/components/Shared/Counter";
 import Mousetrap from "mousetrap";
 import { useGalleryLightbox } from "src/hooks/Lightbox/hooks";
+import {
+  GalleryDetailsLayoutProvider,
+  readGallerySidebarCollapsed,
+} from "src/hooks/GalleryDetailsLayout";
 import { useToast } from "src/hooks/Toast";
 import { OrganizedButton } from "src/components/Scenes/SceneDetails/OrganizedButton";
 import { GalleryEditPanel } from "./GalleryEditPanel";
@@ -65,7 +69,9 @@ export const GalleryPage: React.FC<IProps> = ({ gallery, add }) => {
   const { showStudioText } = configuration?.ui ?? {};
   const showLightbox = useGalleryLightbox(gallery.id, gallery.chapters);
 
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(() =>
+    readGallerySidebarCollapsed(configuration?.ui)
+  );
 
   const [activeTabKey, setActiveTabKey] = useState("gallery-details-panel");
 
@@ -403,63 +409,67 @@ export const GalleryPage: React.FC<IProps> = ({ gallery, add }) => {
   const title = galleryTitle(gallery);
 
   return (
-    <div className="row">
-      <Helmet>
-        <title>{title}</title>
-      </Helmet>
-      {maybeRenderDeleteDialog()}
-      {maybeRenderGenerateDialog()}
-      <div className={`gallery-tabs ${collapsed ? "collapsed" : ""}`}>
-        <div>
-          <div className="gallery-header-container">
-            <StudioLogo studio={gallery.studio} showText={showStudioText} />
-            <h3
-              className={cx("gallery-header", { "no-studio": !gallery.studio })}
-            >
-              <TruncatedText lineCount={2} text={title} />
-            </h3>
-          </div>
+    <GalleryDetailsLayoutProvider collapsed={collapsed}>
+      <div className="row">
+        <Helmet>
+          <title>{title}</title>
+        </Helmet>
+        {maybeRenderDeleteDialog()}
+        {maybeRenderGenerateDialog()}
+        <div className={`gallery-tabs ${collapsed ? "collapsed" : ""}`}>
+          <div>
+            <div className="gallery-header-container">
+              <StudioLogo studio={gallery.studio} showText={showStudioText} />
+              <h3
+                className={cx("gallery-header", {
+                  "no-studio": !gallery.studio,
+                })}
+              >
+                <TruncatedText lineCount={2} text={title} />
+              </h3>
+            </div>
 
-          <div className="gallery-subheader">
-            {!!gallery.date && (
-              <span className="date" data-value={gallery.date}>
-                <FormattedDate value={gallery.date} />
-              </span>
-            )}
-          </div>
+            <div className="gallery-subheader">
+              {!!gallery.date && (
+                <span className="date" data-value={gallery.date}>
+                  <FormattedDate value={gallery.date} />
+                </span>
+              )}
+            </div>
 
-          <div className="gallery-toolbar">
-            <span className="gallery-toolbar-group">
-              <RatingSystem
-                value={gallery.rating100}
-                onSetRating={setRating}
-                clickToRate
-                withoutContext
-              />
-            </span>
-            <span className="gallery-toolbar-group">
-              <span>
-                <OrganizedButton
-                  loading={organizedLoading}
-                  organized={gallery.organized}
-                  onClick={onOrganizedClick}
+            <div className="gallery-toolbar">
+              <span className="gallery-toolbar-group">
+                <RatingSystem
+                  value={gallery.rating100}
+                  onSetRating={setRating}
+                  clickToRate
+                  withoutContext
                 />
               </span>
-              <span>{renderOperations()}</span>
-            </span>
+              <span className="gallery-toolbar-group">
+                <span>
+                  <OrganizedButton
+                    loading={organizedLoading}
+                    organized={gallery.organized}
+                    onClick={onOrganizedClick}
+                  />
+                </span>
+                <span>{renderOperations()}</span>
+              </span>
+            </div>
           </div>
+          {renderTabs()}
         </div>
-        {renderTabs()}
+        <div className="gallery-divider d-none d-xl-block">
+          <Button onClick={() => setCollapsed(!collapsed)}>
+            <Icon className="fa-fw" icon={getCollapseButtonIcon()} />
+          </Button>
+        </div>
+        <div className={`gallery-container ${collapsed ? "expanded" : ""}`}>
+          {renderRightTabs()}
+        </div>
       </div>
-      <div className="gallery-divider d-none d-xl-block">
-        <Button onClick={() => setCollapsed(!collapsed)}>
-          <Icon className="fa-fw" icon={getCollapseButtonIcon()} />
-        </Button>
-      </div>
-      <div className={`gallery-container ${collapsed ? "expanded" : ""}`}>
-        {renderRightTabs()}
-      </div>
-    </div>
+    </GalleryDetailsLayoutProvider>
   );
 };
 

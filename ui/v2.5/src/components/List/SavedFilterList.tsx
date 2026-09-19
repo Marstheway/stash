@@ -23,6 +23,7 @@ import {
   SavedFilterDataFragment,
 } from "src/core/generated-graphql";
 import { View } from "./views";
+import { useGalleryLayoutUIOptions } from "src/hooks/GalleryDetailsLayout";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Icon } from "../Shared/Icon";
 import { LoadingIndicator } from "../Shared/LoadingIndicator";
@@ -254,6 +255,7 @@ export const SavedFilterList: React.FC<ISavedFilterListProps> = ({
 }) => {
   const Toast = useToast();
   const intl = useIntl();
+  const layoutUIOptions = useGalleryLayoutUIOptions(view);
 
   const { data, error, loading, refetch } = useFindSavedFilters(filter.mode);
 
@@ -349,7 +351,10 @@ export const SavedFilterList: React.FC<ISavedFilterListProps> = ({
             mode: filter.mode,
             find_filter: filterCopy.makeFindFilter(),
             object_filter: filterCopy.makeSavedFilter(),
-            ui_options: filterCopy.makeSavedUIOptions(),
+            ui_options: {
+              ...filterCopy.makeSavedUIOptions(),
+              ...layoutUIOptions,
+            },
           },
         },
       });
@@ -611,6 +616,7 @@ export const SidebarSavedFilterList: React.FC<ISavedFilterListProps> = ({
 }) => {
   const Toast = useToast();
   const intl = useIntl();
+  const layoutUIOptions = useGalleryLayoutUIOptions(view);
 
   const [currentSavedFilter, setCurrentSavedFilter] = useState<{
     id: string;
@@ -731,7 +737,10 @@ export const SidebarSavedFilterList: React.FC<ISavedFilterListProps> = ({
             mode: filter.mode,
             find_filter: filterCopy.makeFindFilter(),
             object_filter: filterCopy.makeSavedFilter(),
-            ui_options: filterCopy.makeSavedUIOptions(),
+            ui_options: {
+              ...filterCopy.makeSavedUIOptions(),
+              ...layoutUIOptions,
+            },
           },
         },
       });
