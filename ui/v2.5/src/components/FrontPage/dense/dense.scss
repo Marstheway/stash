@@ -1,0 +1,32 @@
+.recommendations-container-dense {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - #{$navbar-height} - 0.5rem);
+}
+
+.frontpage-dense {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+
+.frontpage-dense-section {
+  min-width: 0;
+}
+
+.frontpage-dense-paged .frontpage-dense-section {
+  box-sizing: border-box;
+  min-height: calc(100vh - #{$navbar-height} - 0.5rem);
+}
+
+.frontpage-dense .recommendation-row-head {
+  padding-bottom: 8px;
+  padding-top: 8px;
+}
+
+.frontpage-dense-skeleton {
+  background-color: #30404d;
+  border-radius: 3px;
+  min-height: 240px;
+  opacity: 0.65;
+}

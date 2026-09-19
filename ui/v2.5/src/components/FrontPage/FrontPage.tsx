@@ -6,6 +6,7 @@ import { Button } from "react-bootstrap";
 import { FrontPageConfig } from "./FrontPageConfig";
 import { useToast } from "src/hooks/Toast";
 import { Control } from "./Control";
+import { FrontPageDense } from "./dense/FrontPageDense";
 import { useConfigurationContext } from "src/hooks/Config";
 import {
   FrontPageContent,
@@ -66,15 +67,27 @@ const FrontPage: React.FC = PatchComponent("FrontPage", () => {
     onUpdateConfig(defaultContent);
   }
 
-  const frontPageContent = getFrontPageContent(ui);
+  const frontPageContent = getFrontPageContent(ui) ?? [];
+  // Local: 1–2 filters fill the viewport; 3+ keep upstream carousels.
+  const useDense = frontPageContent.length >= 1 && frontPageContent.length <= 2;
 
   return (
-    <div className="recommendations-container">
-      <div>
-        {frontPageContent?.map((content, i) => (
-          <Control key={i} content={content} />
-        ))}
-      </div>
+    <div
+      className={
+        useDense
+          ? "recommendations-container recommendations-container-dense"
+          : "recommendations-container"
+      }
+    >
+      {useDense ? (
+        <FrontPageDense contents={frontPageContent} />
+      ) : (
+        <div>
+          {frontPageContent.map((content, i) => (
+            <Control key={i} content={content} />
+          ))}
+        </div>
+      )}
       <div className="recommendations-footer">
         <Button onClick={() => setIsEditing(true)}>
           <FormattedMessage id={"actions.customise"} />
