@@ -48,7 +48,6 @@ import { PluginRoutes, PluginsLoader } from "./plugins";
 
 // import plugin_api to run code
 import "./pluginApi";
-import { ConnectionMonitor } from "./ConnectionMonitor";
 import { TroubleshootingModeOverlay } from "./components/TroubleshootingMode/TroubleshootingModeOverlay";
 import { PatchFunction } from "./patch";
 
@@ -392,7 +391,6 @@ export const App: React.FC = () => {
             <AppContainer>
               <ConfigurationProvider configuration={config.data!.configuration}>
                 {maybeRenderReleaseNotes()}
-                <ConnectionMonitor />
                 <TroubleshootingModeOverlay />
                 <Suspense fallback={<LoadingIndicator />}>
                   <LightboxProvider>
