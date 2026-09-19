@@ -1,6 +1,73 @@
+.Lightbox-header {
+  height: 2.5rem;
+  left: 0;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 1046;
+}
+
+.Lightbox-header .btn,
+.Lightbox-header .dropdown,
+.Lightbox-header .dropdown-menu {
+  pointer-events: auto;
+}
+
+.Lightbox-footer {
+  height: 3rem;
+
+  > div:nth-child(2) {
+    min-width: 0;
+    overflow-wrap: normal;
+  }
+}
+
+.Lightbox-footer-left {
+  align-items: center;
+  flex-direction: row;
+}
+
+.Lightbox-footer-center {
+  align-items: center;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 0.75rem;
+  justify-content: center;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.Lightbox-footer-center .lightbox-position {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.Lightbox-footer-center .image-link,
+.Lightbox-footer-center .image-gallery-link {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.Lightbox-footer-center .image-gallery-link {
+  align-items: center;
+  display: inline-flex;
+
+  span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
 .Lightbox-footer-right {
   align-items: center;
   display: flex;
+  flex-shrink: 0;
+  gap: 0.15rem;
   justify-content: flex-end;
   padding-right: 1em;
 }

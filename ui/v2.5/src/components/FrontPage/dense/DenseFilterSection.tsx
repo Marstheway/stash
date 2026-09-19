@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { FormattedMessage } from "react-intl";
 import * as GQL from "src/core/generated-graphql";
@@ -31,6 +31,7 @@ import {
   computeDenseLayout,
   DENSE_ZOOM_WIDTHS,
   frontPageViewAllPath,
+  IDenseLayout,
 } from "./denseLayout";
 import { IDenseViewport } from "./useDenseViewport";
 
@@ -44,6 +45,36 @@ function useQueryFilter(filter: ListFilterModel, itemsPerPage: number) {
     ret.currentPage = 1;
     return ret;
   }, [filter, itemsPerPage]);
+}
+
+function pickQueryData<T>(result: {
+  data?: T | null;
+  previousData?: T | null;
+  loading: boolean;
+}): { data: T | undefined; showSkeleton: boolean } {
+  const data = result.data ?? result.previousData ?? undefined;
+  return {
+    data,
+    showSkeleton: result.loading && data === undefined,
+  };
+}
+
+function useStableDenseLayout(layout: IDenseLayout): IDenseLayout {
+  const [stable, setStable] = useState(layout);
+
+  useEffect(() => {
+    if (
+      stable.itemsPerPage === layout.itemsPerPage &&
+      stable.zoomIndex === layout.zoomIndex
+    ) {
+      return;
+    }
+
+    const handle = window.setTimeout(() => setStable(layout), 250);
+    return () => window.clearTimeout(handle);
+  }, [layout, stable.itemsPerPage, stable.zoomIndex]);
+
+  return stable;
 }
 
 interface ISectionShell {
@@ -123,11 +154,12 @@ const DenseScenes: React.FC<IGridProps> = ({
 }) => {
   const queryFilter = useQueryFilter(filter, itemsPerPage);
   const result = useFindScenes(queryFilter);
+  const { data, showSkeleton } = pickQueryData(result);
   const queue = useMemo(
     () => SceneQueue.fromListFilterModel(queryFilter),
     [queryFilter]
   );
-  const scenes = result.data?.findScenes.scenes ?? [];
+  const scenes = data?.findScenes.scenes ?? [];
 
   return (
     <SectionShell
@@ -135,8 +167,8 @@ const DenseScenes: React.FC<IGridProps> = ({
       header={header}
       mode={GQL.FilterMode.Scenes}
       filter={filter}
-      count={result.data?.findScenes.count ?? 0}
-      loading={result.loading}
+      count={data?.findScenes.count ?? 0}
+      loading={showSkeleton}
     >
       <SceneCardGrid
         scenes={scenes}
@@ -157,7 +189,8 @@ const DenseImages: React.FC<IGridProps> = ({
 }) => {
   const queryFilter = useQueryFilter(filter, itemsPerPage);
   const result = useFindImages(queryFilter);
-  const images = result.data?.findImages.images ?? [];
+  const { data, showSkeleton } = pickQueryData(result);
+  const images = data?.findImages.images ?? [];
 
   return (
     <SectionShell
@@ -165,8 +198,8 @@ const DenseImages: React.FC<IGridProps> = ({
       header={header}
       mode={GQL.FilterMode.Images}
       filter={filter}
-      count={result.data?.findImages.count ?? 0}
-      loading={result.loading}
+      count={data?.findImages.count ?? 0}
+      loading={showSkeleton}
     >
       <DenseImageGrid images={images} zoomIndex={zoomIndex} />
     </SectionShell>
@@ -181,7 +214,8 @@ const DenseGalleries: React.FC<IGridProps> = ({
 }) => {
   const queryFilter = useQueryFilter(filter, itemsPerPage);
   const result = useFindGalleries(queryFilter);
-  const galleries = result.data?.findGalleries.galleries ?? [];
+  const { data, showSkeleton } = pickQueryData(result);
+  const galleries = data?.findGalleries.galleries ?? [];
 
   return (
     <SectionShell
@@ -189,8 +223,8 @@ const DenseGalleries: React.FC<IGridProps> = ({
       header={header}
       mode={GQL.FilterMode.Galleries}
       filter={filter}
-      count={result.data?.findGalleries.count ?? 0}
-      loading={result.loading}
+      count={data?.findGalleries.count ?? 0}
+      loading={showSkeleton}
     >
       <GalleryCardGrid
         galleries={galleries}
@@ -210,7 +244,8 @@ const DensePerformers: React.FC<IGridProps> = ({
 }) => {
   const queryFilter = useQueryFilter(filter, itemsPerPage);
   const result = useFindPerformers(queryFilter);
-  const performers = result.data?.findPerformers.performers ?? [];
+  const { data, showSkeleton } = pickQueryData(result);
+  const performers = data?.findPerformers.performers ?? [];
 
   return (
     <SectionShell
@@ -218,8 +253,8 @@ const DensePerformers: React.FC<IGridProps> = ({
       header={header}
       mode={GQL.FilterMode.Performers}
       filter={filter}
-      count={result.data?.findPerformers.count ?? 0}
-      loading={result.loading}
+      count={data?.findPerformers.count ?? 0}
+      loading={showSkeleton}
     >
       <PerformerCardGrid
         performers={performers}
@@ -239,7 +274,8 @@ const DenseStudios: React.FC<IGridProps> = ({
 }) => {
   const queryFilter = useQueryFilter(filter, itemsPerPage);
   const result = useFindStudios(queryFilter);
-  const studios = result.data?.findStudios.studios ?? [];
+  const { data, showSkeleton } = pickQueryData(result);
+  const studios = data?.findStudios.studios ?? [];
 
   return (
     <SectionShell
@@ -247,8 +283,8 @@ const DenseStudios: React.FC<IGridProps> = ({
       header={header}
       mode={GQL.FilterMode.Studios}
       filter={filter}
-      count={result.data?.findStudios.count ?? 0}
-      loading={result.loading}
+      count={data?.findStudios.count ?? 0}
+      loading={showSkeleton}
     >
       <StudioCardGrid
         studios={studios}
@@ -269,7 +305,8 @@ const DenseTags: React.FC<IGridProps> = ({
 }) => {
   const queryFilter = useQueryFilter(filter, itemsPerPage);
   const result = useFindTags(queryFilter);
-  const tags = result.data?.findTags.tags ?? [];
+  const { data, showSkeleton } = pickQueryData(result);
+  const tags = data?.findTags.tags ?? [];
 
   return (
     <SectionShell
@@ -277,8 +314,8 @@ const DenseTags: React.FC<IGridProps> = ({
       header={header}
       mode={GQL.FilterMode.Tags}
       filter={filter}
-      count={result.data?.findTags.count ?? 0}
-      loading={result.loading}
+      count={data?.findTags.count ?? 0}
+      loading={showSkeleton}
     >
       <TagCardGrid
         tags={tags}
@@ -298,7 +335,8 @@ const DenseGroups: React.FC<IGridProps> = ({
 }) => {
   const queryFilter = useQueryFilter(filter, itemsPerPage);
   const result = useFindGroups(queryFilter);
-  const groups = result.data?.findGroups.groups ?? [];
+  const { data, showSkeleton } = pickQueryData(result);
+  const groups = data?.findGroups.groups ?? [];
 
   return (
     <SectionShell
@@ -306,8 +344,8 @@ const DenseGroups: React.FC<IGridProps> = ({
       header={header}
       mode={GQL.FilterMode.Groups}
       filter={filter}
-      count={result.data?.findGroups.count ?? 0}
-      loading={result.loading}
+      count={data?.findGroups.count ?? 0}
+      loading={showSkeleton}
     >
       <GroupCardGrid
         groups={groups}
@@ -327,7 +365,8 @@ const DenseMarkers: React.FC<IGridProps> = ({
 }) => {
   const queryFilter = useQueryFilter(filter, itemsPerPage);
   const result = useFindSceneMarkers(queryFilter);
-  const markers = result.data?.findSceneMarkers.scene_markers ?? [];
+  const { data, showSkeleton } = pickQueryData(result);
+  const markers = data?.findSceneMarkers.scene_markers ?? [];
 
   return (
     <SectionShell
@@ -335,8 +374,8 @@ const DenseMarkers: React.FC<IGridProps> = ({
       header={header}
       mode={GQL.FilterMode.SceneMarkers}
       filter={filter}
-      count={result.data?.findSceneMarkers.count ?? 0}
-      loading={result.loading}
+      count={data?.findSceneMarkers.count ?? 0}
+      loading={showSkeleton}
     >
       <SceneMarkerCardGrid
         markers={markers}
@@ -367,12 +406,13 @@ export const DenseFilterSection: React.FC<IDenseFilterSection> = ({
     () => computeDenseLayout(viewport.width, viewport.height, mode, extraRow),
     [viewport.width, viewport.height, extraRow, mode]
   );
+  const stableLayout = useStableDenseLayout(layout);
 
   const gridProps: IGridProps = {
     filter,
     header,
-    zoomIndex: layout.zoomIndex,
-    itemsPerPage: layout.itemsPerPage,
+    zoomIndex: stableLayout.zoomIndex,
+    itemsPerPage: stableLayout.itemsPerPage,
   };
 
   switch (mode) {

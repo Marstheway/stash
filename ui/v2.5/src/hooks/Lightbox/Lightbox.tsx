@@ -914,9 +914,6 @@ export const LightboxComponent: React.FC<IProps> = ({
           <div className={CLASSNAME_LEFT_SPACER}>{renderChapterMenu()}</div>
           <div className={CLASSNAME_INDICATOR}>
             <span>{chapterHeader()}</span>
-            {displayTotal > 1 ? (
-              <b ref={indicatorRef}>{`${currentNumber} / ${displayTotal}`}</b>
-            ) : undefined}
           </div>
           <div className={CLASSNAME_RIGHT}>
             <div className={CLASSNAME_OPTIONS}>
@@ -1097,47 +1094,46 @@ export const LightboxComponent: React.FC<IProps> = ({
             )}
           </div>
           <div className={CLASSNAME_FOOTER_CENTER}>
+            {displayTotal > 1 ? (
+              <b
+                ref={indicatorRef}
+                className="lightbox-position"
+              >{`${currentNumber} / ${displayTotal}`}</b>
+            ) : undefined}
             {currentImage && (
-              <>
-                <div
-                  className="d-flex align-items-center justify-content-center"
-                  style={{ gap: "0.5rem" }}
-                >
-                  <Link
-                    className="image-link"
-                    to={`/images/${currentImage.id}`}
-                    replace
-                    onClick={() => close("navigate")}
-                  >
-                    {title ?? ""}
-                  </Link>
-                  {currentImage.id !== undefined && (
-                    <Button
-                      className="minimal delete-button"
-                      onClick={() => setDeleteTarget(currentImage)}
-                      title={intl.formatMessage({ id: "actions.delete" })}
-                    >
-                      <Icon icon={faTrash} />
-                    </Button>
-                  )}
-                </div>
-                {currentImage.galleries?.length ? (
-                  <Link
-                    className="image-gallery-link"
-                    to={`/galleries/${currentImage.galleries[0].id}`}
-                    replace
-                    onClick={() => close("navigate")}
-                  >
-                    <Icon icon={faImages} />
-                    {galleryTitle(currentImage.galleries[0])}
-                  </Link>
-                ) : null}
-              </>
+              <Link
+                className="image-link"
+                to={`/images/${currentImage.id}`}
+                replace
+                onClick={() => close("navigate")}
+              >
+                {title ?? ""}
+              </Link>
             )}
+            {currentImage?.galleries?.length ? (
+              <Link
+                className="image-gallery-link"
+                to={`/galleries/${currentImage.galleries[0].id}`}
+                replace
+                onClick={() => close("navigate")}
+              >
+                <Icon icon={faImages} />
+                <span>{galleryTitle(currentImage.galleries[0])}</span>
+              </Link>
+            ) : null}
           </div>
           <div className={CLASSNAME_FOOTER_RIGHT}>
             {currentImage?.id !== undefined && (
-              <LightboxTagToggles image={currentImage} />
+              <>
+                <LightboxTagToggles image={currentImage} />
+                <Button
+                  className="minimal delete-button"
+                  onClick={() => setDeleteTarget(currentImage)}
+                  title={intl.formatMessage({ id: "actions.delete" })}
+                >
+                  <Icon icon={faTrash} />
+                </Button>
+              </>
             )}
           </div>
         </div>
