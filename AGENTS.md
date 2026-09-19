@@ -21,6 +21,34 @@ compose 的 Python/GPU 依赖装在独立层，不跟 `stash:local` 绑定；每
 
 部署现状：booster 已配置 `pull: false` 使用本地镜像；SQLite 数据库在本机 SSD（`/data/service/stash/db/`），`~/bin/backup.sh` 每周自动同步到 NFS。
 
+## 本地测试开发服务器
+
+不要用 Docker 再拉一套 stash-test。源码改 UI / 后端，用官方 `make` 在仓库 `.local/` 里跑独立实例，和生产（booster `:3000`）互不影响。
+
+数据与配置都在 `.local/`（已 gitignore）：`config.yml`、`stash-go.sqlite`、`generated/`、`cache/`、`blobs/`。库目录指到 `~/temp/test-media`。
+
+首次或 GraphQL 生成文件过期时：
+
+```bash
+cd /data/workspace/stash
+make pre-ui
+make generate
+```
+
+两个终端：
+
+```bash
+# 后端，默认 http://localhost:9999/
+make server-start
+
+# 前端热更新。生产 stash 已占 :3000，必须换端口
+cd ui/v2.5 && npm run start -- --host --port 3010
+```
+
+浏览器开 `http://localhost:3010/`，Vite 默认连 `localhost:9999`。改后端后需 Ctrl-C 再 `make server-start`。
+
+`.local/config.yml` 里关键项：`port: 9999`，`stash[].path: /home/guoweiwei/temp/test-media`。清空测试数据：`make server-clean`（会删整个 `.local/`，下次启动走 Setup Wizard，库路径要重新指到 `~/temp/test-media`）。
+
 ## 开发准则
 
 我们是 stash 的使用者而非上游维护者，本地代码最终需跟随上游 develop 演进。因此添加代码时：
