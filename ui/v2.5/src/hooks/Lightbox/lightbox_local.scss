@@ -15,7 +15,17 @@
 }
 
 .Lightbox-footer {
+  background: linear-gradient(
+    to top,
+    rgba(20, 20, 20, 0.75),
+    rgba(20, 20, 20, 0)
+  );
+  bottom: 0;
   height: 3rem;
+  left: 0;
+  position: absolute;
+  right: 0;
+  z-index: 1046;
 
   > div:nth-child(2) {
     min-width: 0;
