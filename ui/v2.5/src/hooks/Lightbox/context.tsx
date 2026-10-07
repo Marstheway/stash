@@ -6,6 +6,7 @@ import React, {
   useState,
 } from "react";
 import { lazyComponent } from "src/utils/lazyComponent";
+import { resolveLightboxHideAction } from "./historyModel";
 import { ILightboxImage, IChapter } from "./types";
 
 const LightboxComponent = lazyComponent(() => import("./Lightbox"));
@@ -25,6 +26,11 @@ export interface IState {
   pages?: number;
   pageSize?: number;
   totalCount?: number;
+  // Global offset of the current batch, for callers that omit page.
+  indexOffset?: number;
+  // When true, closing discards the pushed history marker instead of going
+  // back, so a later forward cannot reopen this entry.
+  discardHistoryOnClose?: boolean;
   slideshowEnabled: boolean;
   slideshowAutostart?: boolean;
   onClose?: () => void;
@@ -32,6 +38,9 @@ export interface IState {
 interface IContext {
   lightboxState: IState;
   setLightboxState: (state: Partial<IState>) => void;
+  // Exposes the existing onHide handler so an entry point can close its own
+  // lightbox and clean up its history entry.
+  hideLightbox: (reason?: LightboxHideReason) => void;
 }
 
 interface ILightboxHistoryState {
@@ -73,9 +82,11 @@ export const LightboxProvider: React.FC = ({ children }) => {
   const isDismissingRef = useRef(false);
   const isVisibleRef = useRef(lightboxState.isVisible);
   const onCloseRef = useRef<(() => void) | undefined>();
+  const discardOnCloseRef = useRef(false);
 
   isVisibleRef.current = lightboxState.isVisible;
   onCloseRef.current = lightboxState.onClose;
+  discardOnCloseRef.current = lightboxState.discardHistoryOnClose ?? false;
 
   const isCurrentLightboxHistoryEntry = useCallback(() => {
     return (
@@ -118,6 +129,11 @@ export const LightboxProvider: React.FC = ({ children }) => {
   const closeLightbox = useCallback(() => {
     if (!isVisibleRef.current) return;
 
+    if (discardOnCloseRef.current) {
+      // Browser back may already have moved off the marker entry, so clear
+      // unconditionally; a later forward must not reopen the closed batch.
+      activeHistoryID.current = undefined;
+    }
     isDismissingRef.current = false;
     isVisibleRef.current = false;
     setLightboxState((currentState: IState) =>
@@ -126,6 +142,8 @@ export const LightboxProvider: React.FC = ({ children }) => {
             ...currentState,
             isVisible: false,
             slideshowAutostart: false,
+            // Do not let another entry inherit the discard behaviour.
+            discardHistoryOnClose: false,
           }
         : currentState
     );
@@ -152,21 +170,22 @@ export const LightboxProvider: React.FC = ({ children }) => {
 
   const onHide = useCallback(
     (reason: LightboxHideReason = "dismiss") => {
-      if (reason === "navigate") {
+      const action = resolveLightboxHideAction({
+        reason,
+        discardOnClose: discardOnCloseRef.current,
+        isCurrentMarker: isCurrentLightboxHistoryEntry(),
+      });
+
+      if (action === "clear-and-close") {
         clearCurrentLightboxHistory();
         closeLightbox();
         return;
       }
 
-      if (isCurrentLightboxHistoryEntry()) {
-        if (isDismissingRef.current) return;
+      if (isDismissingRef.current) return;
 
-        isDismissingRef.current = true;
-        history.back();
-        return;
-      }
-
-      closeLightbox();
+      isDismissingRef.current = true;
+      history.back();
     },
     [clearCurrentLightboxHistory, closeLightbox, isCurrentLightboxHistoryEntry]
   );
@@ -207,7 +226,11 @@ export const LightboxProvider: React.FC = ({ children }) => {
 
   return (
     <LightboxContext.Provider
-      value={{ lightboxState, setLightboxState: setPartialState }}
+      value={{
+        lightboxState,
+        setLightboxState: setPartialState,
+        hideLightbox: onHide,
+      }}
     >
       {children}
       <Suspense fallback={null}>

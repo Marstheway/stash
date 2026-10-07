@@ -8,6 +8,9 @@ interface IExtraProps {
   selected?: boolean;
   onSelectedChanged?: (selected: boolean, shiftKey: boolean) => void;
   selecting?: boolean;
+  // Inbox-only root activation; other callers use the gallery onClick.
+  onActivate?: () => void;
+  tabIndex?: number;
 }
 
 export const ImageWallItem: React.FC<RenderImageProps & IExtraProps> = (
@@ -36,6 +39,8 @@ export const ImageWallItem: React.FC<RenderImageProps & IExtraProps> = (
     divStyle.top = props.top;
   }
 
+  const activate = props.onActivate;
+
   var handleClick = function handleClick(
     event: React.MouseEvent<Element, MouseEvent>
   ) {
@@ -45,8 +50,22 @@ export const ImageWallItem: React.FC<RenderImageProps & IExtraProps> = (
       event.stopPropagation();
       return;
     }
+    if (activate) {
+      activate();
+      return;
+    }
     if (props.onClick) {
       props.onClick(event, { index: props.index });
+    }
+  };
+
+  var handleKeyDown = function handleKeyDown(event: React.KeyboardEvent) {
+    if (!activate) return;
+    // Ignore keys from nested controls (e.g. selection inputs).
+    if (event.target !== event.currentTarget) return;
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      activate();
     }
   };
 
@@ -60,6 +79,9 @@ export const ImageWallItem: React.FC<RenderImageProps & IExtraProps> = (
       className="wall-item"
       style={divStyle}
       onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      role={activate ? "button" : undefined}
+      tabIndex={activate ? props.tabIndex : undefined}
       {...dragProps}
     >
       {props.onSelectedChanged && (
@@ -84,7 +106,7 @@ export const ImageWallItem: React.FC<RenderImageProps & IExtraProps> = (
         width={width}
         height={height}
         alt={props.photo.alt}
-        onClick={handleClick}
+        onClick={activate ? undefined : handleClick}
       />
     </div>
   );

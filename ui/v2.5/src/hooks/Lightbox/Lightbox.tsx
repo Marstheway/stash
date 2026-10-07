@@ -99,6 +99,8 @@ interface IProps {
   pages?: number;
   pageSize?: number;
   totalCount?: number;
+  // Global offset of the current batch, for callers that omit page.
+  indexOffset?: number;
   pageCallback?: (props: { direction?: number; page?: number }) => void;
   chapters?: IChapter[];
   hide: (reason?: LightboxHideReason) => void;
@@ -116,6 +118,7 @@ export const LightboxComponent: React.FC<IProps> = ({
   page,
   pageSize = 40,
   totalCount,
+  indexOffset = 0,
   pageCallback,
   chapters = [],
   hide,
@@ -682,7 +685,7 @@ export const LightboxComponent: React.FC<IProps> = ({
     const imageNumber = (index ?? 0) + 1;
     const globalIndex = page
       ? (page - 1) * pageSize + imageNumber
-      : imageNumber;
+      : imageNumber + indexOffset;
 
     let chapterTitle = "";
     chapters.forEach((chapter) => {
@@ -905,7 +908,7 @@ export const LightboxComponent: React.FC<IProps> = ({
     const currentNumber =
       page !== undefined
         ? (page - 1) * pageSize + currentIndex + 1
-        : currentIndex + 1;
+        : currentIndex + 1 + indexOffset;
     const displayTotal = totalCount ?? images.length;
 
     return (

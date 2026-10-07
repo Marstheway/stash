@@ -1,0 +1,160 @@
+// Inbox home styles. Palette: page #202c34, toolbar/overlay #2c3d49,
+// divider #405461, primary text #edf3f6, secondary text #a5b8c4, focus #76b9df.
+// The content wall itself is rendered by react-photo-gallery and the existing
+// wall items, so only the page shell and toolbar live here.
+
+.inbox-home {
+  background-color: #202c34;
+  box-sizing: border-box;
+  color: #edf3f6;
+  min-height: calc(100vh - #{$navbar-height});
+  overflow-x: hidden;
+  padding: 0 16px 24px;
+}
+
+.inbox-toolbar {
+  align-items: center;
+  background-color: #2c3d49;
+  border-bottom: 1px solid #405461;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 0 -16px 12px;
+  padding: 10px 16px;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.inbox-title {
+  color: #edf3f6;
+  font-family: "Arial Narrow", "Arial Narrow Bold", Arial, sans-serif;
+  font-size: 1.5rem;
+  font-stretch: condensed;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.inbox-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.inbox-tab {
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  color: #a5b8c4;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 4px 12px;
+
+  &.active {
+    background-color: #405461;
+    color: #edf3f6;
+  }
+}
+
+.inbox-tab:focus-visible,
+.inbox-view-all:focus-visible,
+.inbox-wall .wall-item:focus-visible,
+.inbox-home button:focus-visible {
+  outline: 2px solid #76b9df;
+  outline-offset: 2px;
+}
+
+.inbox-toolbar-actions {
+  align-items: center;
+  display: flex;
+  gap: 16px;
+  margin-left: auto;
+}
+
+.inbox-view-all {
+  color: #a5b8c4;
+  text-decoration: none;
+
+  &:hover {
+    color: #edf3f6;
+  }
+}
+
+.inbox-notice {
+  align-items: center;
+  background-color: #2c3d49;
+  border: 1px solid #405461;
+  border-radius: 3px;
+  color: #a5b8c4;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 8px 12px;
+
+  a {
+    color: #76b9df;
+  }
+}
+
+.inbox-wall {
+  margin-top: 12px;
+  min-width: 0;
+}
+
+.inbox-video-badge {
+  background-color: rgba(32, 44, 52, 0.85);
+  color: #edf3f6;
+  left: 8px;
+  padding: 5px 6px;
+  pointer-events: none;
+  position: absolute;
+  top: 8px;
+  z-index: 3;
+}
+
+.inbox-footer {
+  display: flex;
+  justify-content: center;
+  margin: 16px 0;
+}
+
+.inbox-skeleton {
+  animation: inbox-skeleton-pulse 2s infinite ease-in-out;
+  background-color: #2c3d49;
+  border-radius: 3px;
+  margin-top: 12px;
+  min-height: 240px;
+  opacity: 0.65;
+}
+
+@keyframes inbox-skeleton-pulse {
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@media (max-width: 576px) {
+  .inbox-home {
+    padding: 0 8px 16px;
+  }
+
+  .inbox-toolbar {
+    margin: 0 -8px 8px;
+    padding: 8px;
+  }
+
+  .inbox-title {
+    font-size: 1.25rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .inbox-skeleton {
+    animation: none;
+  }
+
+  .inbox-tab {
+    transition: none;
+  }
+}

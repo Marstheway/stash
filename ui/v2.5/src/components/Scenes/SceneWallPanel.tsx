@@ -34,6 +34,12 @@ interface IExtraProps {
   selected?: boolean;
   onSelectedChanged?: (selected: boolean, shiftKey: boolean) => void;
   selecting?: boolean;
+  // Inbox override: "" hides the title instead of falling back to a filename.
+  title?: string;
+  // Inbox-only root activation; other callers navigate through gallery onClick.
+  onActivate?: () => void;
+  tabIndex?: number;
+  children?: React.ReactNode;
 }
 
 export const SceneWallItem: React.FC<
@@ -70,6 +76,8 @@ export const SceneWallItem: React.FC<
     divStyle.top = props.top;
   }
 
+  const activate = props.onActivate;
+
   const handleClick = function (event: React.MouseEvent) {
     if (props.selecting && props.onSelectedChanged) {
       props.onSelectedChanged(!props.selected, event.shiftKey);
@@ -77,8 +85,22 @@ export const SceneWallItem: React.FC<
       event.stopPropagation();
       return;
     }
+    if (activate) {
+      activate();
+      return;
+    }
     if (props.onClick) {
       props.onClick(event, { index: props.index });
+    }
+  };
+
+  const handleKeyDown = function (event: React.KeyboardEvent) {
+    if (!activate) return;
+    // Ignore keys from nested controls (e.g. the footer link).
+    if (event.target !== event.currentTarget) return;
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      activate();
     }
   };
 
@@ -111,7 +133,7 @@ export const SceneWallItem: React.FC<
   }, [video, playSound, volume]);
 
   const { scene } = props.photo;
-  const title = objectTitle(scene);
+  const title = props.title ?? objectTitle(scene);
   const performerNames = scene.performers.map((p) => p.name);
   const performers =
     performerNames.length >= 2
@@ -125,6 +147,8 @@ export const SceneWallItem: React.FC<
       className={cx("wall-item", { "show-title": showTitle })}
       role="button"
       onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      tabIndex={activate ? props.tabIndex : undefined}
       {...dragProps}
       style={{
         ...divStyle,
@@ -149,6 +173,7 @@ export const SceneWallItem: React.FC<
       ) : (
         <img {...previewProps} loading="lazy" />
       )}
+      {props.children}
       <div className="lineargradient">
         <footer className="wall-item-footer">
           <Link

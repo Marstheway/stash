@@ -15,8 +15,9 @@ import {
 } from "src/core/config";
 import { useScrollToTopOnMount } from "src/hooks/scrollToTop";
 import { PatchComponent } from "src/patch";
+import InboxHome from "./inbox/InboxHome";
 
-const FrontPage: React.FC = PatchComponent("FrontPage", () => {
+const FrontPage: React.FC = PatchComponent("LegacyFrontPage", () => {
   const intl = useIntl();
   const Toast = useToast();
 
@@ -97,4 +98,10 @@ const FrontPage: React.FC = PatchComponent("FrontPage", () => {
   );
 });
 
-export default FrontPage;
+export const LegacyFrontPage = FrontPage;
+
+const InboxFrontPage: React.FC = PatchComponent("FrontPage", () => {
+  return <InboxHome />;
+});
+
+export default InboxFrontPage;
