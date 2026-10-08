@@ -1,0 +1,39 @@
+// Local-only. Quick wallpaper / sexy tag toggles on the scene detail tab.
+
+.Scene-tag-toggles {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.Scene-tag-toggle.badge {
+  appearance: none;
+  border: 1px solid rgba(191, 204, 214, 0.35);
+  font-size: 12px;
+  font-weight: 600;
+  margin: 0;
+  padding: 3px 12px;
+
+  &.is-off {
+    background-color: transparent;
+    color: rgba(191, 204, 214, 0.6);
+  }
+
+  &.is-on {
+    border-color: transparent;
+    color: #202b33;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+  }
+}
+
+.Scene-tag-toggle.badge.wallpaper.is-on {
+  background-color: #5bc0de;
+}
+
+.Scene-tag-toggle.badge.sexy.is-on {
+  background-color: #ff7373;
+}
